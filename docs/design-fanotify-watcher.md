@@ -396,7 +396,7 @@ The API uses **JSON-RPC 2.0** over a **Unix domain socket** with newline-delimit
 - Slightly faster than TCP loopback (no TCP overhead)
 - File permissions control access — standard Unix security model
 
-Socket path: `~/.local/state/ralph/fandex.sock`
+Socket path: `$XDG_RUNTIME_DIR/fandex/fandex.sock` (falls back to `/tmp/fandex-$UID/fandex.sock` if `XDG_RUNTIME_DIR` is unset)
 
 ### Why JSON-RPC 2.0
 
