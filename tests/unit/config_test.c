@@ -7,12 +7,14 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+static const char *no_args[] = {"fandex"};
+
 START_TEST(test_config_defaults) {
     unsetenv("FANDEX_WATCH_PATH");
     unsetenv("FANDEX_DB_PATH");
     unsetenv("FANDEX_SOCKET_PATH");
 
-    fx_config_t *cfg = fx_config_load();
+    fx_config_t *cfg = fx_config_load(1, no_args);
     ck_assert_ptr_nonnull(cfg);
 
     const char *home = getenv("HOME");
@@ -37,7 +39,7 @@ START_TEST(test_config_env_overrides) {
     setenv("FANDEX_DB_PATH", "/tmp/test.db", 1);
     setenv("FANDEX_SOCKET_PATH", "/tmp/test.sock", 1);
 
-    fx_config_t *cfg = fx_config_load();
+    fx_config_t *cfg = fx_config_load(1, no_args);
     ck_assert_ptr_nonnull(cfg);
 
     ck_assert_str_eq(cfg->watch_path, "/mnt/data/projects");
@@ -57,7 +59,7 @@ START_TEST(test_config_partial_overrides) {
     setenv("FANDEX_DB_PATH", "/custom/path.db", 1);
     unsetenv("FANDEX_SOCKET_PATH");
 
-    fx_config_t *cfg = fx_config_load();
+    fx_config_t *cfg = fx_config_load(1, no_args);
     ck_assert_ptr_nonnull(cfg);
 
     const char *home = getenv("HOME");
@@ -78,6 +80,44 @@ START_TEST(test_config_partial_overrides) {
 }
 END_TEST
 
+START_TEST(test_config_args_win_over_env) {
+    setenv("FANDEX_WATCH_PATH", "/env/watch", 1);
+    setenv("FANDEX_DB_PATH", "/env/db.db", 1);
+    setenv("FANDEX_SOCKET_PATH", "/env/sock", 1);
+
+    const char *args[] = {"fandex", "--watch", "/arg/watch", "--db", "/arg/db.db", "--socket", "/arg/sock"};
+    fx_config_t *cfg = fx_config_load(7, args);
+    ck_assert_ptr_nonnull(cfg);
+
+    ck_assert_str_eq(cfg->watch_path, "/arg/watch");
+    ck_assert_str_eq(cfg->db_path, "/arg/db.db");
+    ck_assert_str_eq(cfg->socket_path, "/arg/sock");
+
+    fx_config_free(cfg);
+
+    unsetenv("FANDEX_WATCH_PATH");
+    unsetenv("FANDEX_DB_PATH");
+    unsetenv("FANDEX_SOCKET_PATH");
+}
+END_TEST
+
+START_TEST(test_config_args_win_over_defaults) {
+    unsetenv("FANDEX_WATCH_PATH");
+    unsetenv("FANDEX_DB_PATH");
+    unsetenv("FANDEX_SOCKET_PATH");
+
+    const char *args[] = {"fandex", "--watch", "/arg/watch", "--db", "/arg/db.db", "--socket", "/arg/sock"};
+    fx_config_t *cfg = fx_config_load(7, args);
+    ck_assert_ptr_nonnull(cfg);
+
+    ck_assert_str_eq(cfg->watch_path, "/arg/watch");
+    ck_assert_str_eq(cfg->db_path, "/arg/db.db");
+    ck_assert_str_eq(cfg->socket_path, "/arg/sock");
+
+    fx_config_free(cfg);
+}
+END_TEST
+
 static Suite *config_suite(void)
 {
     Suite *s = suite_create("config");
@@ -86,6 +126,8 @@ static Suite *config_suite(void)
     tcase_add_test(tc, test_config_defaults);
     tcase_add_test(tc, test_config_env_overrides);
     tcase_add_test(tc, test_config_partial_overrides);
+    tcase_add_test(tc, test_config_args_win_over_env);
+    tcase_add_test(tc, test_config_args_win_over_defaults);
     suite_add_tcase(s, tc);
 
     return s;
