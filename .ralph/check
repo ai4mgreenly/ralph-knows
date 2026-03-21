@@ -1,0 +1,22 @@
+#!/bin/sh
+
+root="$(cd "$(dirname "$0")/.." && pwd)"
+export PATH="$root/.claude/bin:$PATH"
+
+checks="compile link filesize unit complexity"
+failed=""
+
+for name in $checks; do
+    result=$(check-${name})
+    ok=$(printf '%s' "$result" | ruby -rjson -e 'puts JSON.parse(STDIN.read)["ok"]')
+    if [ "$ok" != "true" ]; then
+        failed="$failed check-$name"
+    fi
+done
+
+if [ -z "$failed" ]; then
+    printf '{"ok": true}\n'
+else
+    printf '{"ok": false, "failed": [%s]}\n' "$(echo "$failed" | xargs -n1 | sed 's/.*/"&"/' | paste -sd,)"
+    exit 1
+fi

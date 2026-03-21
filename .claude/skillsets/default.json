@@ -2,9 +2,8 @@
   "preload": [
     "jj",
     "align",
-    "scratch"
+    "scratch",
+    "harness"
   ],
-  "advertise": [
-    {"skill": "harness", "description": "Quality check harness scripts and development inner loop"}
-  ]
+  "advertise": []
 }

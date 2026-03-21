@@ -40,27 +40,49 @@ Run only when explicitly requested.
 | `check-valgrind` | Valgrind memcheck clean |
 | `check-helgrind` | Valgrind helgrind clean |
 
+## Always Use check-* Scripts, Never make Directly
+
+**Never run `make check-*` targets directly.** Always use the `check-*` wrapper scripts instead. The harness scripts parse make's verbose output and return compact structured JSON (`{"ok": true/false, "items": [...]}`). Running make directly dumps raw compiler output into context, wasting thousands of tokens on noise. The harness scripts are drastically more token-efficient.
+
 ## CLI
 
 - `.claude/bin/check-<name>` — symlinks to quality check harness run scripts
 - `.claude/bin/fix-<name>` — symlinks to fix harness run scripts
 
-## Development Inner Loop
+All check scripts are on PATH via `.claude/bin/`.
 
-After changing a file, run the relevant check with `--file=PATH` on that file:
+## Running check-* Scripts
 
+### Single file (development inner loop)
+
+Use `--file=PATH` to scope a check to one file. This is fast (seconds) and is how you should work during active development.
+
+```bash
+check-compile --file=src/config/config.c
+check-unit --file=tests/unit/config_test.c
+```
+
+After changing a file:
 - `check-compile --file=PATH` after every edit
 - `check-unit --file=PATH` when a test file exists
 - Other checks as relevant to the change
 
-Stay in this single-file loop. It takes seconds. Do not run project-wide checks during active development.
+Stay in this single-file loop. Do not run project-wide checks during active development.
 
-## Running check-* Scripts
+### Project-wide (exit gate)
 
-All check scripts are on PATH via `.claude/bin/`.
+Run with no args to check everything. Use this as the exit gate when work is complete.
 
-- **Single file:** `check-compile --file=PATH` — scopes the check to one file. Use this during development for fast feedback.
-- **Project-wide:** `check-compile` (no args) — checks everything. Use this as the exit gate when work is complete.
+```bash
+check-compile
+check-link
+check-filesize
+check-unit
+check-complexity
+```
+
+### Execution rules
+
 - **Timeout:** Use 60 minute timeout (`timeout: 3600000`)
 - **Foreground:** Always run in foreground (never use `run_in_background`)
 - **Blocking:** No output until completion — do not tail or monitor, just wait
