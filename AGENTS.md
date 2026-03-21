@@ -12,6 +12,15 @@ All work happens on `main`. Do not create branches. No feature branches, no topi
 
 Use `/load <name>` to load a skill. Use `/load name1 name2` to load multiple.
 
+### Goals
+
+Use `/ralph-goal` to create, queue, and manage goals. When creating goals that involve C code, include a Skills section in the goal body so Ralph knows to load them:
+
+```
+## Skills
+/load memory errors naming style
+```
+
 ### Skillsets
 
 Use `/skillset <name>` to load a skillset.
