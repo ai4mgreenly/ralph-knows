@@ -3,7 +3,7 @@
 root="$(cd "$(dirname "$0")/.." && pwd)"
 export PATH="$root/.claude/bin:$PATH"
 
-checks="compile link filesize unit complexity"
+checks="fmt compile link filesize unit complexity"
 failed=""
 
 for name in $checks; do
