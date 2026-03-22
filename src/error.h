@@ -16,15 +16,10 @@ typedef enum {
     OK = 0,
     ERR_INVALID_ARG,
     ERR_OUT_OF_RANGE,
-    ERR_IO,                  // File operations, config loading
-    ERR_PARSE,               // JSON/protocol parsing
-    ERR_DB_CONNECT,          // Database connection failures
-    ERR_DB_MIGRATE,          // Database migration failures
-    ERR_OUT_OF_MEMORY,       // Memory allocation failures
-    ERR_AGENT_NOT_FOUND,     // Agent not found in array
-    ERR_PROVIDER,            // Provider error
-    ERR_MISSING_CREDENTIALS, // Missing credentials
-    ERR_NOT_IMPLEMENTED,     // Not implemented
+    ERR_IO,              // File operations, config loading
+    ERR_PARSE,           // JSON/protocol parsing
+    ERR_OUT_OF_MEMORY,   // Memory allocation failures
+    ERR_NOT_IMPLEMENTED, // Not implemented
 } err_code_t;
 
 // Error with context and embedded message buffer
@@ -152,18 +147,8 @@ static inline const char *error_code_str(err_code_t code)
             return "IO error";
         case ERR_PARSE:
             return "Parse error";
-        case ERR_DB_CONNECT:
-            return "Database connection error";
-        case ERR_DB_MIGRATE:
-            return "Database migration error";
         case ERR_OUT_OF_MEMORY:
             return "Out of memory";
-        case ERR_AGENT_NOT_FOUND:
-            return "Agent not found";
-        case ERR_PROVIDER:
-            return "Provider error";
-        case ERR_MISSING_CREDENTIALS:
-            return "Missing credentials";
         case ERR_NOT_IMPLEMENTED:
             return "Not implemented";
         default: // LCOV_EXCL_LINE
