@@ -18,12 +18,14 @@ int main(int argc, char **argv)
     fx_cfg_t *cfg = res.ok;
 
     if (cfg->help) {
-        printf("usage: fandex [--watch PATH] [--db PATH] [--socket PATH] [-h]\n"
+        printf("usage: fandex [--watch PATH] [--db PATH] [--socket PATH]\n"
+               "              [--log-level LEVEL] [-h]\n"
                "\n"
-               "  --watch PATH    directory to watch (default: %s)\n"
-               "  --db PATH       database path (default: %s)\n"
-               "  --socket PATH   socket path (default: %s)\n"
-               "  -h, --help      show this help\n",
+               "  --watch PATH        directory to watch (default: %s)\n"
+               "  --db PATH           database path (default: %s)\n"
+               "  --socket PATH       socket path (default: %s)\n"
+               "  --log-level LEVEL   log level: debug, info, warn, error (default: info)\n"
+               "  -h, --help          show this help\n",
                cfg->watch_path, cfg->db_path, cfg->socket_path);
         talloc_free(ctx);
         return 0;
