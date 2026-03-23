@@ -1,5 +1,5 @@
-#ifndef FX_WRAPPER_POSIX_H
-#define FX_WRAPPER_POSIX_H
+#ifndef RK_WRAPPER_POSIX_H
+#define RK_WRAPPER_POSIX_H
 
 #include "wrapper_base.h"
 
@@ -52,4 +52,4 @@ int32_t posix_poll_(struct pollfd *fds, nfds_t nfds, int32_t timeout);
 
 #endif // NDEBUG
 
-#endif // FX_WRAPPER_POSIX_H
+#endif // RK_WRAPPER_POSIX_H

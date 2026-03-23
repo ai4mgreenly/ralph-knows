@@ -12,33 +12,33 @@
 
 static void clear_env(void)
 {
-    unsetenv("FANDEX_WATCH_PATH");
-    unsetenv("FANDEX_DB_PATH");
-    unsetenv("FANDEX_SOCKET_PATH");
+    unsetenv("RALPH_KNOWS_WATCH_PATH");
+    unsetenv("RALPH_KNOWS_DB_PATH");
+    unsetenv("RALPH_KNOWS_SOCKET_PATH");
     unsetenv("XDG_RUNTIME_DIR");
-    unsetenv("FANDEX_LOG_LEVEL");
+    unsetenv("RALPH_KNOWS_LOG_LEVEL");
 }
 
 START_TEST(test_env_no_vars) {
     clear_env();
 
     TALLOC_CTX *ctx = talloc_new(NULL);
-    fx_cfg_t *cfg = talloc_zero(ctx, fx_cfg_t);
-    res_t r = fx_cfg_env_load(cfg);
+    rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
+    res_t r = rk_cfg_env_load(cfg);
     ck_assert(!r.is_err);
 
     const char *home = getenv("HOME");
     uid_t uid = getuid();
     char expected[512];
 
-    (void)snprintf(expected, sizeof(expected), "%s%s", home, FX_DEFAULT_WATCH_PATH_SUFFIX);
+    (void)snprintf(expected, sizeof(expected), "%s%s", home, RK_DEFAULT_WATCH_PATH_SUFFIX);
     ck_assert_str_eq(cfg->watch_path, expected);
 
-    (void)snprintf(expected, sizeof(expected), "%s%s", home, FX_DEFAULT_DB_PATH_SUFFIX);
+    (void)snprintf(expected, sizeof(expected), "%s%s", home, RK_DEFAULT_DB_PATH_SUFFIX);
     ck_assert_str_eq(cfg->db_path, expected);
 
     (void)snprintf(expected, sizeof(expected), "/run/user/%u%s", (unsigned)uid,
-                   FX_DEFAULT_SOCKET_PATH_SUFFIX);
+                   RK_DEFAULT_SOCKET_PATH_SUFFIX);
     ck_assert_str_eq(cfg->socket_path, expected);
 
     talloc_free(ctx);
@@ -47,11 +47,11 @@ END_TEST
 
 START_TEST(test_env_watch_path) {
     clear_env();
-    setenv("FANDEX_WATCH_PATH", "/tmp/watch", 1);
+    setenv("RALPH_KNOWS_WATCH_PATH", "/tmp/watch", 1);
 
     TALLOC_CTX *ctx = talloc_new(NULL);
-    fx_cfg_t *cfg = talloc_zero(ctx, fx_cfg_t);
-    res_t r = fx_cfg_env_load(cfg);
+    rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
+    res_t r = rk_cfg_env_load(cfg);
     ck_assert(!r.is_err);
 
     ck_assert_str_eq(cfg->watch_path, "/tmp/watch");
@@ -59,12 +59,12 @@ START_TEST(test_env_watch_path) {
     const char *home = getenv("HOME");
     char expected[512];
 
-    (void)snprintf(expected, sizeof(expected), "%s%s", home, FX_DEFAULT_DB_PATH_SUFFIX);
+    (void)snprintf(expected, sizeof(expected), "%s%s", home, RK_DEFAULT_DB_PATH_SUFFIX);
     ck_assert_str_eq(cfg->db_path, expected);
 
     uid_t uid = getuid();
     (void)snprintf(expected, sizeof(expected), "/run/user/%u%s", (unsigned)uid,
-                   FX_DEFAULT_SOCKET_PATH_SUFFIX);
+                   RK_DEFAULT_SOCKET_PATH_SUFFIX);
     ck_assert_str_eq(cfg->socket_path, expected);
 
     talloc_free(ctx);
@@ -74,11 +74,11 @@ END_TEST
 
 START_TEST(test_env_db_path) {
     clear_env();
-    setenv("FANDEX_DB_PATH", "/tmp/test.db", 1);
+    setenv("RALPH_KNOWS_DB_PATH", "/tmp/test.db", 1);
 
     TALLOC_CTX *ctx = talloc_new(NULL);
-    fx_cfg_t *cfg = talloc_zero(ctx, fx_cfg_t);
-    res_t r = fx_cfg_env_load(cfg);
+    rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
+    res_t r = rk_cfg_env_load(cfg);
     ck_assert(!r.is_err);
 
     ck_assert_str_eq(cfg->db_path, "/tmp/test.db");
@@ -86,12 +86,12 @@ START_TEST(test_env_db_path) {
     const char *home = getenv("HOME");
     char expected[512];
 
-    (void)snprintf(expected, sizeof(expected), "%s%s", home, FX_DEFAULT_WATCH_PATH_SUFFIX);
+    (void)snprintf(expected, sizeof(expected), "%s%s", home, RK_DEFAULT_WATCH_PATH_SUFFIX);
     ck_assert_str_eq(cfg->watch_path, expected);
 
     uid_t uid = getuid();
     (void)snprintf(expected, sizeof(expected), "/run/user/%u%s", (unsigned)uid,
-                   FX_DEFAULT_SOCKET_PATH_SUFFIX);
+                   RK_DEFAULT_SOCKET_PATH_SUFFIX);
     ck_assert_str_eq(cfg->socket_path, expected);
 
     talloc_free(ctx);
@@ -101,11 +101,11 @@ END_TEST
 
 START_TEST(test_env_socket_path) {
     clear_env();
-    setenv("FANDEX_SOCKET_PATH", "/tmp/test.sock", 1);
+    setenv("RALPH_KNOWS_SOCKET_PATH", "/tmp/test.sock", 1);
 
     TALLOC_CTX *ctx = talloc_new(NULL);
-    fx_cfg_t *cfg = talloc_zero(ctx, fx_cfg_t);
-    res_t r = fx_cfg_env_load(cfg);
+    rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
+    res_t r = rk_cfg_env_load(cfg);
     ck_assert(!r.is_err);
 
     ck_assert_str_eq(cfg->socket_path, "/tmp/test.sock");
@@ -113,10 +113,10 @@ START_TEST(test_env_socket_path) {
     const char *home = getenv("HOME");
     char expected[512];
 
-    (void)snprintf(expected, sizeof(expected), "%s%s", home, FX_DEFAULT_WATCH_PATH_SUFFIX);
+    (void)snprintf(expected, sizeof(expected), "%s%s", home, RK_DEFAULT_WATCH_PATH_SUFFIX);
     ck_assert_str_eq(cfg->watch_path, expected);
 
-    (void)snprintf(expected, sizeof(expected), "%s%s", home, FX_DEFAULT_DB_PATH_SUFFIX);
+    (void)snprintf(expected, sizeof(expected), "%s%s", home, RK_DEFAULT_DB_PATH_SUFFIX);
     ck_assert_str_eq(cfg->db_path, expected);
 
     talloc_free(ctx);
@@ -129,12 +129,12 @@ START_TEST(test_env_xdg_runtime_dir) {
     setenv("XDG_RUNTIME_DIR", "/custom/dir", 1);
 
     TALLOC_CTX *ctx = talloc_new(NULL);
-    fx_cfg_t *cfg = talloc_zero(ctx, fx_cfg_t);
-    res_t r = fx_cfg_env_load(cfg);
+    rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
+    res_t r = rk_cfg_env_load(cfg);
     ck_assert(!r.is_err);
 
     char expected[512];
-    (void)snprintf(expected, sizeof(expected), "/custom/dir%s", FX_DEFAULT_SOCKET_PATH_SUFFIX);
+    (void)snprintf(expected, sizeof(expected), "/custom/dir%s", RK_DEFAULT_SOCKET_PATH_SUFFIX);
     ck_assert_str_eq(cfg->socket_path, expected);
 
     talloc_free(ctx);
@@ -143,13 +143,13 @@ START_TEST(test_env_xdg_runtime_dir) {
 END_TEST
 
 START_TEST(test_env_all_three) {
-    setenv("FANDEX_WATCH_PATH", "/tmp/w", 1);
-    setenv("FANDEX_DB_PATH", "/tmp/d", 1);
-    setenv("FANDEX_SOCKET_PATH", "/tmp/s", 1);
+    setenv("RALPH_KNOWS_WATCH_PATH", "/tmp/w", 1);
+    setenv("RALPH_KNOWS_DB_PATH", "/tmp/d", 1);
+    setenv("RALPH_KNOWS_SOCKET_PATH", "/tmp/s", 1);
 
     TALLOC_CTX *ctx = talloc_new(NULL);
-    fx_cfg_t *cfg = talloc_zero(ctx, fx_cfg_t);
-    res_t r = fx_cfg_env_load(cfg);
+    rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
+    res_t r = rk_cfg_env_load(cfg);
     ck_assert(!r.is_err);
 
     ck_assert_str_eq(cfg->watch_path, "/tmp/w");
@@ -165,10 +165,10 @@ START_TEST(test_env_no_log_level) {
     clear_env();
 
     TALLOC_CTX *ctx = talloc_new(NULL);
-    fx_cfg_t *cfg = talloc_zero(ctx, fx_cfg_t);
-    res_t r = fx_cfg_env_load(cfg);
+    rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
+    res_t r = rk_cfg_env_load(cfg);
     ck_assert(!r.is_err);
-    ck_assert_int_eq(cfg->log_level, FX_LOG_INFO);
+    ck_assert_int_eq(cfg->log_level, RK_LOG_INFO);
 
     talloc_free(ctx);
 }
@@ -176,13 +176,13 @@ END_TEST
 
 START_TEST(test_env_log_level_warn) {
     clear_env();
-    setenv("FANDEX_LOG_LEVEL", "warn", 1);
+    setenv("RALPH_KNOWS_LOG_LEVEL", "warn", 1);
 
     TALLOC_CTX *ctx = talloc_new(NULL);
-    fx_cfg_t *cfg = talloc_zero(ctx, fx_cfg_t);
-    res_t r = fx_cfg_env_load(cfg);
+    rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
+    res_t r = rk_cfg_env_load(cfg);
     ck_assert(!r.is_err);
-    ck_assert_int_eq(cfg->log_level, FX_LOG_WARN);
+    ck_assert_int_eq(cfg->log_level, RK_LOG_WARN);
 
     talloc_free(ctx);
     clear_env();
@@ -191,13 +191,13 @@ END_TEST
 
 START_TEST(test_env_log_level_debug) {
     clear_env();
-    setenv("FANDEX_LOG_LEVEL", "debug", 1);
+    setenv("RALPH_KNOWS_LOG_LEVEL", "debug", 1);
 
     TALLOC_CTX *ctx = talloc_new(NULL);
-    fx_cfg_t *cfg = talloc_zero(ctx, fx_cfg_t);
-    res_t r = fx_cfg_env_load(cfg);
+    rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
+    res_t r = rk_cfg_env_load(cfg);
     ck_assert(!r.is_err);
-    ck_assert_int_eq(cfg->log_level, FX_LOG_DEBUG);
+    ck_assert_int_eq(cfg->log_level, RK_LOG_DEBUG);
 
     talloc_free(ctx);
     clear_env();
@@ -206,11 +206,11 @@ END_TEST
 
 START_TEST(test_env_log_level_invalid) {
     clear_env();
-    setenv("FANDEX_LOG_LEVEL", "garbage", 1);
+    setenv("RALPH_KNOWS_LOG_LEVEL", "garbage", 1);
 
     TALLOC_CTX *ctx = talloc_new(NULL);
-    fx_cfg_t *cfg = talloc_zero(ctx, fx_cfg_t);
-    res_t r = fx_cfg_env_load(cfg);
+    rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
+    res_t r = rk_cfg_env_load(cfg);
     ck_assert(r.is_err);
 
     talloc_free(ctx);

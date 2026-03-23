@@ -22,13 +22,14 @@
 
 extern volatile sig_atomic_t g_shutdown;
 
-struct fx_watch {
+struct rk_watch {
     int32_t fan_fd;
-    fx_log_t *log;
+    int32_t mount_fd;
+    rk_log_t *log;
     const char *watch_path;
 };
 
-const char *fx_watch_event_name(uint32_t mask)
+const char *rk_watch_event_name(uint32_t mask)
 {
     if (mask & FAN_CREATE) {
         return "create";
@@ -48,7 +49,7 @@ const char *fx_watch_event_name(uint32_t mask)
     return NULL;
 }
 
-bool fx_watch_path_under(const char *watch_path, const char *path)
+bool rk_watch_path_under(const char *watch_path, const char *path)
 {
     if (!watch_path || !path) {
         return false;
@@ -69,7 +70,7 @@ bool fx_watch_path_under(const char *watch_path, const char *path)
     return path[wlen] == '\0' || path[wlen] == '/';
 }
 
-res_t fx_watch_init(TALLOC_CTX *ctx, fx_log_t *log, const char *watch_path)
+res_t rk_watch_init(TALLOC_CTX *ctx, rk_log_t *log, const char *watch_path)
 {
     int32_t fan_fd = posix_fanotify_init_(
         FAN_CLASS_NOTIF | FAN_REPORT_FID | FAN_REPORT_DFID_NAME,
@@ -91,33 +92,46 @@ res_t fx_watch_init(TALLOC_CTX *ctx, fx_log_t *log, const char *watch_path)
         mask,
         dir_fd,
         NULL);
-    posix_close_(dir_fd);
     if (rc < 0) {
+        posix_close_(dir_fd);
         posix_close_(fan_fd);
         return ERR(ctx, IO, "fanotify_mark failed: %s", strerror(errno));
     }
 
-    fx_watch_t *w = talloc_zero(ctx, fx_watch_t);
+    rk_watch_t *w = talloc_zero(ctx, rk_watch_t);
     if (!w) PANIC("Out of memory"); // LCOV_EXCL_BR_LINE
 
     w->fan_fd = fan_fd;
+    w->mount_fd = dir_fd;
     w->log = log;
     w->watch_path = watch_path;
 
-    fx_log_info(log, "watch init watch_path=%s", watch_path);
+    rk_log_info(log, "watch init watch_path=%s", watch_path);
     return OK(w);
 }
 
-// Forward declaration - processes one fanotify event
-void process_fan_event(fx_watch_t *w, struct fanotify_event_metadata *meta);
+static const char *const allowed_exts[] = {".md", ".txt", ".c", ".h"};
 
-void process_fan_event(fx_watch_t *w, struct fanotify_event_metadata *meta)
+static bool has_allowed_ext(const char *path)
+{
+    const char *dot = strrchr(path, '.');
+    if (!dot) return false;
+    for (size_t i = 0; i < sizeof(allowed_exts) / sizeof(allowed_exts[0]); i++) {
+        if (strcmp(dot, allowed_exts[i]) == 0) return true;
+    }
+    return false;
+}
+
+// Forward declaration - processes one fanotify event
+void process_fan_event(rk_watch_t *w, struct fanotify_event_metadata *meta);
+
+void process_fan_event(rk_watch_t *w, struct fanotify_event_metadata *meta)
 {
     struct fanotify_event_info_fid *fid =
         (struct fanotify_event_info_fid *)(void *)(meta + 1);
 
     if (fid->hdr.info_type != FAN_EVENT_INFO_TYPE_DFID_NAME) {
-        fx_log_warn(w->log, "drop event: unexpected info_type=%u",
+        rk_log_warn(w->log, "drop event: unexpected info_type=%u",
                     (unsigned)fid->hdr.info_type);
         return;
     }
@@ -125,10 +139,10 @@ void process_fan_event(fx_watch_t *w, struct fanotify_event_metadata *meta)
     struct file_handle *fh = (struct file_handle *)(void *)fid->handle;
     const char *fname = (const char *)(const void *)(fh->f_handle + fh->handle_bytes);
 
-    int dir_fd = open_by_handle_at(AT_FDCWD, fh,
+    int dir_fd = open_by_handle_at((int)w->mount_fd, fh,
                                    O_RDONLY | O_PATH | O_NOFOLLOW | O_CLOEXEC);
     if (dir_fd < 0) {
-        fx_log_warn(w->log, "drop event: open_by_handle_at failed: %s",
+        rk_log_warn(w->log, "drop event: open_by_handle_at failed: %s",
                     strerror(errno));
         return;
     }
@@ -137,18 +151,18 @@ void process_fan_event(fx_watch_t *w, struct fanotify_event_metadata *meta)
     char dir_path[PATH_MAX];
     int n_fmt = snprintf(proc_path, sizeof(proc_path), "/proc/self/fd/%d", dir_fd);
     if (n_fmt < 0 || (size_t)n_fmt >= sizeof(proc_path)) {
-        fx_log_warn(w->log, "drop event: snprintf proc_path failed");
+        rk_log_warn(w->log, "drop event: snprintf proc_path failed");
         posix_close_(dir_fd);
         return;
     }
     ssize_t n = readlink(proc_path, dir_path, sizeof(dir_path) - 1);
     int readlink_errno = errno;
     if (posix_close_(dir_fd) < 0) {
-        fx_log_warn(w->log, "close dir_fd failed: %s", strerror(errno));
+        rk_log_warn(w->log, "close dir_fd failed: %s", strerror(errno));
     }
 
     if (n <= 0) {
-        fx_log_warn(w->log, "drop event: readlink %s failed: %s",
+        rk_log_warn(w->log, "drop event: readlink %s failed: %s",
                     proc_path, strerror(readlink_errno));
         return;
     }
@@ -157,16 +171,19 @@ void process_fan_event(fx_watch_t *w, struct fanotify_event_metadata *meta)
     char *full_path = talloc_asprintf(NULL, "%s/%s", dir_path, fname);
     if (!full_path) PANIC("Out of memory"); // LCOV_EXCL_BR_LINE
 
-    if (fx_watch_path_under(w->watch_path, full_path)) {
-        const char *evname = fx_watch_event_name((uint32_t)meta->mask);
+    if (rk_watch_path_under(w->watch_path, full_path)
+        && !strstr(full_path, "/.jj/")
+        && !strstr(full_path, "/.git/")
+        && has_allowed_ext(full_path)) {
+        const char *evname = rk_watch_event_name((uint32_t)meta->mask);
         if (evname) {
-            fx_log_info(w->log, "event type=%s path=%s", evname, full_path);
+            rk_log_info(w->log, "event type=%s path=%s", evname, full_path);
         }
     }
     talloc_free(full_path);
 }
 
-void fx_watch_run(fx_watch_t *w)
+void rk_watch_run(rk_watch_t *w)
 {
     char buf[4096];
     struct pollfd pfd = {.fd = (int)w->fan_fd, .events = POLLIN};
@@ -197,9 +214,10 @@ void fx_watch_run(fx_watch_t *w)
     }
 }
 
-void fx_watch_free(fx_watch_t *w)
+void rk_watch_free(rk_watch_t *w)
 {
-    fx_log_info(w->log, "watch free");
+    rk_log_info(w->log, "watch free");
+    posix_close_(w->mount_fd);
     posix_close_(w->fan_fd);
     talloc_free(w);
 }

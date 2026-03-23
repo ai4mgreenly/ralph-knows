@@ -1,12 +1,12 @@
 ---
 name: style
-description: Code Style skill for the fandex project
+description: Code Style skill for the ralph-knows project
 ---
 
 # Code Style
 
 ## Description
-Code style conventions for fandex development.
+Code style conventions for ralph-knows development.
 
 ## Details
 

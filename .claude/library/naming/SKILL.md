@@ -1,24 +1,24 @@
 ---
 name: naming
-description: Naming Conventions skill for the fandex project
+description: Naming Conventions skill for the ralph-knows project
 ---
 
 # Naming Conventions
 
 ## Description
-Naming conventions for the fandex C codebase.
+Naming conventions for the ralph-knows C codebase.
 
 ## Public Symbol Pattern
 
-All public symbols follow: `fx_MODULE_THING`
-- `fx_` - namespace prefix
+All public symbols follow: `rk_MODULE_THING`
+- `rk_` - namespace prefix
 - `MODULE` - single word (config, watcher, index, rpc)
 - `THING` - descriptive name with approved abbreviations
 
 Examples:
-- `fx_cfg_load()` - function
-- `fx_index_entry_t` - type
-- `fx_watcher_shutdown` - global variable
+- `rk_cfg_load()` - function
+- `rk_index_entry_t` - type
+- `rk_watcher_shutdown` - global variable
 
 **Module Organization:** One subdirectory = One module. All symbols from a module use the same prefix regardless of file location.
 
@@ -65,11 +65,11 @@ const char **text_ptr;     // Raw pointer to external string pointer
 extern volatile sig_atomic_t g_watcher_shutdown;
 ```
 
-**Internal static symbols** don't need `fx_` prefix.
+**Internal static symbols** don't need `rk_` prefix.
 
 ## External Library Wrappers
 
-**DO NOT use `fx_` prefix** - these are link seams for testing.
+**DO NOT use `rk_` prefix** - these are link seams for testing.
 
 **Library wrappers** (talloc, yyjson) use **trailing underscore**:
 ```c

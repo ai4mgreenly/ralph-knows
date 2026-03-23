@@ -1,12 +1,12 @@
-# fandex
+# ralph-knows
 
 Search index for `~/projects`. Watches the filesystem for changes, keeps full-text and semantic search indexes up to date, serves results over a Unix socket.
 
 ## How it works
 
-Files on disk are the source of truth. fandex monitors `~/projects` via fanotify and automatically indexes every file it sees. Edit a file, fandex re-indexes it. Delete a file, fandex drops it from the index. The database is a cache — delete it and fandex rebuilds from the current filesystem.
+Files on disk are the source of truth. ralph-knows monitors `~/projects` via fanotify and automatically indexes every file it sees. Edit a file, ralph-knows re-indexes it. Delete a file, ralph-knows drops it from the index. The database is a cache — delete it and ralph-knows rebuilds from the current filesystem.
 
-`.gitignore` files control what gets indexed. If git ignores it, fandex ignores it.
+`.gitignore` files control what gets indexed. If git ignores it, ralph-knows ignores it.
 
 ## Guides
 

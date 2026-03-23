@@ -1,11 +1,11 @@
 ---
 name: memory
-description: talloc-based memory management and ownership rules for fandex
+description: talloc-based memory management and ownership rules for ralph-knows
 ---
 
 # Memory Management
 
-talloc hierarchical memory allocator for fandex. Use this for all new code.
+talloc hierarchical memory allocator for ralph-knows. Use this for all new code.
 
 ## Why talloc?
 
@@ -62,12 +62,12 @@ void handle_request(const char *input) {
     TALLOC_CTX *req_ctx = talloc_new(NULL);
 
     // All allocations are children of req_ctx
-    res_t res = fx_protocol_msg_parse(req_ctx, input);
+    res_t res = rk_protocol_msg_parse(req_ctx, input);
     if (is_err(&res)) {
         talloc_free(req_ctx);
         return;
     }
-    fx_protocol_msg_t *msg = res.ok;
+    rk_protocol_msg_t *msg = res.ok;
 
     // ... process message ...
 
@@ -78,9 +78,9 @@ void handle_request(const char *input) {
 ## Pattern 2: Allocate on Caller's Context
 
 ```c
-res_t fx_cfg_load(TALLOC_CTX *ctx, const char *path) {
+res_t rk_cfg_load(TALLOC_CTX *ctx, const char *path) {
     // Allocate config as child of caller's context
-    fx_cfg_t *config = talloc_zero_(ctx, sizeof(fx_cfg_t));
+    rk_cfg_t *config = talloc_zero_(ctx, sizeof(rk_cfg_t));
     if (!config) PANIC("Out of memory");
 
     // Strings are children of config
@@ -92,8 +92,8 @@ res_t fx_cfg_load(TALLOC_CTX *ctx, const char *path) {
 
 // Caller owns and frees
 TALLOC_CTX *ctx = talloc_new(NULL);
-res_t res = fx_cfg_load(ctx, "config.json");
-fx_cfg_t *config = res.ok;
+res_t res = rk_cfg_load(ctx, "config.json");
+rk_cfg_t *config = res.ok;
 // ... use config ...
 talloc_free(ctx);  // Frees config and all strings
 ```

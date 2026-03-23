@@ -13,7 +13,7 @@
 make
 ```
 
-This produces `bin/fandex` (debug build). For a release build:
+This produces `bin/ralph-knows` (debug build). For a release build:
 
 ```
 make BUILD=release
@@ -27,18 +27,18 @@ make install
 
 This does three things:
 
-1. Copies the binary to `~/.local/bin/fandex`
+1. Copies the binary to `~/.local/bin/ralph-knows`
 2. Grants it `CAP_SYS_ADMIN` via `setcap` (requires sudo)
 3. That's it — no root daemon, no setuid, no system-wide install
 
-The capability lets fandex use fanotify to watch `~/projects` as a
+The capability lets ralph-knows use fanotify to watch `~/projects` as a
 normal user. It's stored in filesystem extended attributes on the
 binary and survives reboots.
 
 ## Verify
 
 ```
-fandex --help
+ralph-knows --help
 ```
 
 If `~/.local/bin` isn't on your PATH, add it:
@@ -49,7 +49,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ## What it watches
 
-fandex watches `~/projects` and indexes every file it finds, honoring
+ralph-knows watches `~/projects` and indexes every file it finds, honoring
 `.gitignore` at every level. Clone a repo into `~/projects` and it's
 searchable within seconds.
 
@@ -57,18 +57,18 @@ searchable within seconds.
 
 | Path                                    | Purpose                               |
 |-----------------------------------------|---------------------------------------|
-| `~/.local/bin/fandex`                   | Binary                                |
-| `~/.local/state/fandex/fandex.db`       | SQLite database (the index)           |
-| `$XDG_RUNTIME_DIR/fandex/fandex.sock`   | Unix socket (JSON-RPC API, see below) |
+| `~/.local/bin/ralph-knows`                   | Binary                                |
+| `~/.local/state/ralph-knows/ralph-knows.db`       | SQLite database (the index)           |
+| `$XDG_RUNTIME_DIR/ralph-knows/ralph-knows.sock`   | Unix socket (JSON-RPC API, see below) |
 
-The database is a cache. Delete it and fandex rebuilds the full index
+The database is a cache. Delete it and ralph-knows rebuilds the full index
 from disk on next startup.
 
 The socket path follows a fallback chain:
-`$FANDEX_SOCKET_PATH` → `$XDG_RUNTIME_DIR/fandex/fandex.sock` → `/tmp/fandex-$UID/fandex.sock`.
+`$RALPH_KNOWS_SOCKET_PATH` → `$XDG_RUNTIME_DIR/ralph-knows/ralph-knows.sock` → `/tmp/ralph-knows-$UID/ralph-knows.sock`.
 
 All paths are overridable via environment variables:
-`FANDEX_WATCH_PATH`, `FANDEX_DB_PATH`, `FANDEX_SOCKET_PATH`.
+`RALPH_KNOWS_WATCH_PATH`, `RALPH_KNOWS_DB_PATH`, `RALPH_KNOWS_SOCKET_PATH`.
 
 ## After rebuilding
 

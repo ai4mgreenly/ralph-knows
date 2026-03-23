@@ -1,12 +1,12 @@
-# Design: fandex as a Filesystem Index
+# Design: ralph-knows as a Filesystem Index
 
 ## Vision
 
-fandex evolves from a document store into a **search and indexing layer over the filesystem**. Files on disk are the source of truth. fandex watches `~/projects` via fanotify and maintains a searchable index of everything in it.
+ralph-knows evolves from a document store into a **search and indexing layer over the filesystem**. Files on disk are the source of truth. ralph-knows watches `~/projects` via fanotify and maintains a searchable index of everything in it.
 
 ### The key insight
 
-The agent's project folder **is** the indexed volume. There's no separate "memory store." The project itself is the memory. Agents and humans work with files using any tool they already have. fandex just makes it all searchable.
+The agent's project folder **is** the indexed volume. There's no separate "memory store." The project itself is the memory. Agents and humans work with files using any tool they already have. ralph-knows just makes it all searchable.
 
 ### Separation of concerns
 
@@ -14,11 +14,11 @@ The agent's project folder **is** the indexed volume. There's no separate "memor
 |---|---|
 | Filesystem | Content storage (source of truth) |
 | Git | History, versioning, collaboration |
-| fandex | Search and indexing (current state only) |
+| ralph-knows | Search and indexing (current state only) |
 
-fandex does not store content, does not track history, and does not manage versions. If the SQLite database is deleted, it rebuilds the entire index from the current filesystem on next startup. The database is a **cache**, not a source of truth.
+ralph-knows does not store content, does not track history, and does not manage versions. If the SQLite database is deleted, it rebuilds the entire index from the current filesystem on next startup. The database is a **cache**, not a source of truth.
 
-### What fandex becomes
+### What ralph-knows becomes
 
 | Before | After |
 |---|---|
@@ -46,7 +46,7 @@ The watched directory is `~/projects`. Every project the user works on is automa
 
 ```
 ~/projects/
-  fandex/        ← active project
+  ralph-knows/        ← active project
   some-client-project/    ← active project
   new-experiment/         ← active project
   archive/
@@ -65,7 +65,7 @@ The watched directory is `~/projects`. Every project the user works on is automa
 
 No metadata-based scoping needed. Project scoping maps directly to directory structure:
 
-- Search within a project: filter by path prefix `~/projects/fandex/`
+- Search within a project: filter by path prefix `~/projects/ralph-knows/`
 - Search active projects only: exclude `~/projects/archive/`
 - Search everything: no filter
 
@@ -101,7 +101,7 @@ Use Linux **fanotify** to detect filesystem changes in real time.
 The binary runs as a **normal unprivileged user** with only `CAP_SYS_ADMIN` granted via Linux file capabilities:
 
 ```bash
-sudo setcap cap_sys_admin+ep /path/to/fandex
+sudo setcap cap_sys_admin+ep /path/to/ralph-knows
 ```
 
 - No root. No setuid. No systemd dependency.
@@ -128,7 +128,7 @@ sudo setcap cap_sys_admin+ep /path/to/fandex
 
 ### .gitignore Filtering
 
-fanotify watches the entire mount, but not all files should be indexed. fandex honors `.gitignore` files to filter events:
+fanotify watches the entire mount, but not all files should be indexed. ralph-knows honors `.gitignore` files to filter events:
 
 - `.git/` directories are always excluded (noisy — every commit triggers a storm of object file changes)
 - `.gitignore` patterns at any level in the tree are respected (hierarchical, same semantics as git)
@@ -371,7 +371,7 @@ Between a file modification and re-indexing, line numbers from the old index cou
 - **Split pipeline** — FTS5 re-indexing is fast (milliseconds), so the staleness window for keyword search is near-zero. Only semantic search may lag.
 
 ```json
-{"path": "~/projects/fandex/docs/design.md", "line": 142, "anchor": "Use sqlite-vec for vector similarity", "score": 0.87}
+{"path": "~/projects/ralph-knows/docs/design.md", "line": 142, "anchor": "Use sqlite-vec for vector similarity", "score": 0.87}
 ```
 
 ### Embedding cost consideration
@@ -396,7 +396,7 @@ The API uses **JSON-RPC 2.0** over a **Unix domain socket** with newline-delimit
 - Slightly faster than TCP loopback (no TCP overhead)
 - File permissions control access — standard Unix security model
 
-Socket path: `$XDG_RUNTIME_DIR/fandex/fandex.sock` (falls back to `/tmp/fandex-$UID/fandex.sock` if `XDG_RUNTIME_DIR` is unset)
+Socket path: `$XDG_RUNTIME_DIR/ralph-knows/ralph-knows.sock` (falls back to `/tmp/ralph-knows-$UID/ralph-knows.sock` if `XDG_RUNTIME_DIR` is unset)
 
 ### Why JSON-RPC 2.0
 
@@ -412,7 +412,7 @@ One JSON object per line. Newline (`\n`) is the message delimiter.
 
 ```
 → {"jsonrpc":"2.0","id":1,"method":"remember_search","params":{"query":"fanotify"}}\n
-← {"jsonrpc":"2.0","id":1,"result":[{"path":"~/projects/fandex/docs/design.md","line":142,"anchor":"Use sqlite-vec for vector","score":0.87}]}\n
+← {"jsonrpc":"2.0","id":1,"result":[{"path":"~/projects/ralph-knows/docs/design.md","line":142,"anchor":"Use sqlite-vec for vector","score":0.87}]}\n
 ```
 
 ### Why not HTTP
@@ -425,7 +425,7 @@ One JSON object per line. Newline (`\n`) is the message delimiter.
 
 ### Design principle
 
-fandex returns **references, not content**. Search results are `path:line` pointers with a text anchor for resilience. The agent uses its existing file read tools to access the document with full context intact.
+ralph-knows returns **references, not content**. Search results are `path:line` pointers with a text anchor for resilience. The agent uses its existing file read tools to access the document with full context intact.
 
 This means:
 - No content in API responses — smaller payloads, less context window consumed
@@ -442,14 +442,14 @@ The primary method. Searches both keyword (FTS5) and semantic (sqlite-vec) index
 
 Request:
 ```json
-{"jsonrpc":"2.0","id":1,"method":"remember_search","params":{"query":"fanotify","project":"fandex","limit":10}}
+{"jsonrpc":"2.0","id":1,"method":"remember_search","params":{"query":"fanotify","project":"ralph-knows","limit":10}}
 ```
 
 Response:
 ```json
 {"jsonrpc":"2.0","id":1,"result":[
-  {"path":"~/projects/fandex/docs/design.md","line":142,"anchor":"Use sqlite-vec for vector similarity","score":0.87},
-  {"path":"~/projects/fandex/docs/design.md","line":58,"anchor":"fanotify monitors an entire mount point","score":0.73},
+  {"path":"~/projects/ralph-knows/docs/design.md","line":142,"anchor":"Use sqlite-vec for vector similarity","score":0.87},
+  {"path":"~/projects/ralph-knows/docs/design.md","line":58,"anchor":"fanotify monitors an entire mount point","score":0.73},
   {"path":"~/projects/other-project/notes/search.md","line":1,"anchor":"Notes on search implementation","score":0.65}
 ]}
 ```
@@ -465,14 +465,14 @@ Browse indexed files without a search query.
 
 Request:
 ```json
-{"jsonrpc":"2.0","id":2,"method":"remember_list","params":{"project":"fandex","limit":20}}
+{"jsonrpc":"2.0","id":2,"method":"remember_list","params":{"project":"ralph-knows","limit":20}}
 ```
 
 Response:
 ```json
 {"jsonrpc":"2.0","id":2,"result":[
-  {"path":"~/projects/fandex/docs/design.md","size":4096,"modified":"2026-03-20T14:00:00Z"},
-  {"path":"~/projects/fandex/docs/overview.md","size":2048,"modified":"2026-03-19T10:00:00Z"}
+  {"path":"~/projects/ralph-knows/docs/design.md","size":4096,"modified":"2026-03-20T14:00:00Z"},
+  {"path":"~/projects/ralph-knows/docs/overview.md","size":2048,"modified":"2026-03-19T10:00:00Z"}
 ]}
 ```
 
@@ -505,7 +505,7 @@ Standard JSON-RPC 2.0 error format:
 
 ### What agents do NOT need
 
-- **`remember_read`** — agents read files with their own tools. fandex points, it doesn't serve.
+- **`remember_read`** — agents read files with their own tools. ralph-knows points, it doesn't serve.
 - **`remember_write`** — agents write files directly. fanotify detects and indexes the change.
 - **`remember_delete`** — agents delete files directly. fanotify detects the removal and updates the index.
 
@@ -513,7 +513,7 @@ Standard JSON-RPC 2.0 error format:
 
 ### Decision
 
-fandex is a **rewrite in C**, following the conventions established in the ikigai-1 project. The current Go codebase is replaced — the new system shares almost nothing with it.
+ralph-knows is a **rewrite in C**, following the conventions established in the ikigai-1 project. The current Go codebase is replaced — the new system shares almost nothing with it.
 
 ### Why C
 
@@ -524,14 +524,14 @@ fandex is a **rewrite in C**, following the conventions established in the ikiga
 
 ### Namespace
 
-All public symbols use the `fx_` prefix (fandex):
+All public symbols use the `rk_` prefix (ralph-knows):
 
 ```c
-fx_indexer_init()
-fx_search_execute()
-fx_chunker_default()
-fx_fanotify_start()
-fx_jsonrpc_handle()
+rk_indexer_init()
+rk_search_execute()
+rk_chunker_default()
+rk_fanotify_start()
+rk_jsonrpc_handle()
 ```
 
 ### Conventions from ikigai-1
@@ -616,15 +616,15 @@ SQLite runs in **WAL mode**:
 Compiled-in defaults for all settings. Runtime overrides stored in the SQLite database.
 
 ```bash
-fandex config set watch_path=/home/user/projects
-fandex config get watch_path
+ralph-knows config set watch_path=/home/user/projects
+ralph-knows config get watch_path
 ```
 
 The binary works out of the box with zero configuration for the common case.
 
 ## Startup: Initial Sync
 
-On startup, fandex reconciles the index with the current filesystem state:
+On startup, ralph-knows reconciles the index with the current filesystem state:
 
 1. Walk `~/projects`, respecting `.gitignore` files
 2. Compare each file's mtime/hash against the index
@@ -636,19 +636,19 @@ This handles the case where files changed while the service was down. If the dat
 
 ## Deployment: systemd User Service
 
-fandex runs as a **systemd user service** — no root needed for the service itself (the binary has `CAP_SYS_ADMIN` via setcap).
+ralph-knows runs as a **systemd user service** — no root needed for the service itself (the binary has `CAP_SYS_ADMIN` via setcap).
 
 ### Service file
 
-`~/.config/systemd/user/fandex.service`:
+`~/.config/systemd/user/ralph-knows.service`:
 
 ```ini
 [Unit]
-Description=fandex filesystem index
+Description=ralph-knows filesystem index
 After=local-fs.target
 
 [Service]
-ExecStart=%h/.local/bin/fandex --watch %h/projects
+ExecStart=%h/.local/bin/ralph-knows --watch %h/projects
 Restart=on-failure
 RestartSec=5
 
@@ -660,8 +660,8 @@ WantedBy=default.target
 
 ```bash
 systemctl --user daemon-reload
-systemctl --user enable fandex
-systemctl --user start fandex
+systemctl --user enable ralph-knows
+systemctl --user start ralph-knows
 sudo loginctl enable-linger $USER          # run even when not logged in
 ```
 
@@ -670,22 +670,22 @@ sudo loginctl enable-linger $USER          # run even when not logged in
 Traditional format to stdout. journald captures it automatically — no log files, no log rotation, no log directory to manage.
 
 ```
-2026-03-21T14:32:01Z indexed ~/projects/fandex/docs/design.md chunks=7 12ms
+2026-03-21T14:32:01Z indexed ~/projects/ralph-knows/docs/design.md chunks=7 12ms
 2026-03-21T14:32:01Z search query="fanotify" results=3 5ms
-2026-03-21T14:32:02Z fanotify CLOSE_WRITE ~/projects/fandex/main.c
+2026-03-21T14:32:02Z fanotify CLOSE_WRITE ~/projects/ralph-knows/main.c
 ```
 
 ```bash
-journalctl --user -u fandex -f              # follow live
-journalctl --user -u fandex --since "1h ago" # recent logs
-journalctl --user -u fandex -p err           # errors only
+journalctl --user -u ralph-knows -f              # follow live
+journalctl --user -u ralph-knows --since "1h ago" # recent logs
+journalctl --user -u ralph-knows -p err           # errors only
 ```
 
 ### After rebuild
 
 ```bash
 make install                                   # rebuild + setcap
-systemctl --user restart fandex       # pick up new binary
+systemctl --user restart ralph-knows       # pick up new binary
 ```
 
 ## Module Structure
@@ -768,9 +768,9 @@ tests/
 | gitignore | Root path (temp dir in tests) |
 | chunker | None — pure functions |
 | fanotify | Output queue |
-| indexer | `sqlite3 *`, `fx_chunker_t *`, `fx_embed_fn`, input queue, output queue |
+| indexer | `sqlite3 *`, `rk_chunker_t *`, `rk_embed_fn`, input queue, output queue |
 | search | `sqlite3 *` |
-| jsonrpc | `fx_search_t *`, socket fd |
+| jsonrpc | `rk_search_t *`, socket fd |
 | embedding | API endpoint + credentials (fake in tests) |
 
 ### Testing approach
@@ -788,7 +788,7 @@ tests/
 | db | In-memory SQLite — create schema, insert, query, assert |
 | config | In-memory SQLite — set/get values, assert defaults |
 | gitignore | Temp directory with `.gitignore` files — check paths against filter |
-| indexer | In-memory SQLite + temp dir with test files + injected fake `fx_embed_fn` |
+| indexer | In-memory SQLite + temp dir with test files + injected fake `rk_embed_fn` |
 | search | In-memory SQLite pre-populated with known data — query, assert results |
 | jsonrpc | Pass request JSON string, assert response JSON string |
 | embedding | Injected function pointer — swap in fake that returns canned vectors |
@@ -811,4 +811,4 @@ tests/
 - **Embedding model** — which model and dimensionality? (1536-dim OpenAI, 1024-dim Claude, smaller/faster alternatives?)
 - **Hybrid search** — how to combine FTS5 and vector results? Score fusion (RRF), separate endpoints, or caller's choice?
 - **Embedding backpressure** — how to handle burst file changes without overwhelming the embedding API?
-- **Migration path** — how do existing fandex documents get exported to files for the transition?
+- **Migration path** — how do existing ralph-knows documents get exported to files for the transition?

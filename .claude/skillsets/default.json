@@ -3,13 +3,14 @@
     "jj",
     "align",
     "scratch",
-    "harness"
+    "harness",
+    "devlog"
   ],
   "advertise": [
     {"skill": "memory", "description": "talloc-based memory management and ownership rules"},
     {"skill": "errors", "description": "Result types with OK()/ERR() patterns"},
     {"skill": "style", "description": "Code style conventions"},
-    {"skill": "naming", "description": "Naming conventions (fx_ prefix)"},
+    {"skill": "naming", "description": "Naming conventions (rk_ prefix)"},
     {"skill": "ctags", "description": "Code navigation with ctags"}
   ]
 }

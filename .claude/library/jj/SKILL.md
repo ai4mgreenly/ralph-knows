@@ -5,22 +5,14 @@ description: Jujutsu (jj) version control workflow
 
 # Jujutsu (jj)
 
-## Dedicated Checkout Workflow
+## Work Directly on Main
 
-**This checkout is yours alone.** No other work happens here. The workflow is:
+**All work happens on `main`.** No feature branches, no topic branches, no PRs. Commit directly, push directly.
 
 1. **Start fresh**: `jj git fetch` then `jj new main@origin`
 2. **Do work**: Create commits as needed
-3. **Push PR**: Create ONE bookmark on HEAD, push ALL commits (main..HEAD)
-4. **Iterate**: If PR needs updates, commit more, push same bookmark
-5. **Done**: PR merges via GitHub, return to step 1
-
-## CRITICAL Rules
-
-- **ONE bookmark only** - Never create multiple bookmarks
-- **Push ALL commits** - Always push the entire stack from main to HEAD
-- **Never partial pushes** - Don't push just one commit when there are more
-- **Bookmark on HEAD** - The bookmark always points to the top of your stack
+3. **Push**: Move the `main` bookmark to HEAD and push it
+4. **Done**: Return to step 1
 
 ## Starting Work
 
@@ -29,7 +21,7 @@ jj git fetch
 jj new main@origin
 ```
 
-This puts you on a fresh commit with main as parent. All your work builds from here.
+This puts you on a fresh commit with `main@origin` as parent. All your work builds from here.
 
 ## Committing
 
@@ -39,55 +31,27 @@ When user says "commit", use `jj commit -m "msg"`:
 jj commit -m "Add feature X"
 ```
 
-Commits stack automatically. After 3 commits you have: `main -> A -> B -> C (@)`
+Commits stack automatically. After 3 commits you have: `main@origin -> A -> B -> C (@)`
 
-## Creating a PR
+## Pushing to Main
 
-When ready to push:
-
-```bash
-# Create bookmark on current commit (HEAD of your stack)
-jj bookmark create feature-name
-
-# Track the bookmark (required before first push)
-jj bookmark track feature-name@origin
-
-# Push the bookmark (pushes ALL commits from main to HEAD)
-jj git push --bookmark feature-name
-```
-
-## Updating a PR
-
-If PR needs changes:
+When ready to push, move the local `main` bookmark to the top of your stack and push it:
 
 ```bash
-# Make changes, commit
-jj commit -m "Fix review feedback"
+# Move main bookmark to the latest committed revision (parent of @)
+jj bookmark set main --to @-
 
-# Move bookmark to new HEAD
-jj bookmark set feature-name
-
-# Push updated bookmark
-jj git push --bookmark feature-name
+# Push main (pushes ALL commits from main@origin to main)
+jj git push --bookmark main
 ```
 
-## Rebasing a Remote Branch onto main
-
-Remote commits are **immutable** -- `jj rebase` will fail on them. To rebase a remote branch's changes onto main@origin, use `jj restore`:
-
-```bash
-jj new main@origin
-jj restore --from <bookmark>@origin
-```
-
-This creates a new working copy on main and applies all the branch's changes on top. **Never use `jj rebase` on remote commits.**
+The working copy `@` itself is an empty in-progress commit — you want the bookmark on `@-`, which is your last real commit.
 
 ## Prohibited Operations
 
-- Modifying `main` bookmark locally
-- Merging into main locally (PRs only)
-- Force pushing to main
-- Creating multiple bookmarks
+- Creating feature/topic bookmarks (work happens on `main` only)
+- Opening PRs (direct push to `main`)
+- Force pushing to `main`
 - Pushing partial commit stacks
 
 ## Squashing (Permission Required)
@@ -99,11 +63,22 @@ jj edit <revision>
 jj squash -m "Combined message"
 ```
 
-After squashing, update and push bookmark:
+After squashing, update and push:
 ```bash
-jj bookmark set feature-name
-jj git push --bookmark feature-name
+jj bookmark set main --to @-
+jj git push --bookmark main
 ```
+
+## Rebasing Remote Changes
+
+Remote commits are **immutable** — `jj rebase` will fail on them. If `main@origin` has moved and you need to rebase your local stack onto it:
+
+```bash
+jj git fetch
+jj rebase -d main@origin
+```
+
+**Never use `jj rebase` on remote commits themselves.**
 
 ## Recovery
 
@@ -123,14 +98,13 @@ jj op restore <operation-id>
 | View changes | `jj diff` |
 | View log | `jj log` |
 | Commit | `jj commit -m "msg"` |
-| Create bookmark | `jj bookmark create <name>` |
-| Move bookmark to HEAD | `jj bookmark set <name>` |
-| Push bookmark | `jj git push --bookmark <name>` |
-| Track new bookmark | `jj bookmark track <name>@origin` |
+| Move main bookmark to HEAD | `jj bookmark set main --to @-` |
+| Push main | `jj git push --bookmark main` |
 
 ## Key Concepts
 
-- **Working copy** (`@`): Always a commit being edited
-- **Bookmarks**: Named pointers to commits (like git branches)
+- **Working copy** (`@`): The in-progress commit being edited
+- **`@-`**: The parent of the working copy — your last real commit
+- **Bookmarks**: Named pointers to commits (like git branches); only `main` is used
 - **main@origin**: The remote main branch
-- **Commit stack**: Your commits from main to HEAD, all pushed together
+- **Commit stack**: Your commits from `main@origin` to `@-`, all pushed together

@@ -7,7 +7,7 @@
 
 #include "poison.h"
 
-res_t fx_cfg_args_apply(fx_cfg_t *cfg, int argc, const char **argv)
+res_t rk_cfg_args_apply(rk_cfg_t *cfg, int argc, const char **argv)
 {
     for (int32_t i = 1; i < argc; i++) {
         const char *arg = argv[i];
@@ -20,7 +20,7 @@ res_t fx_cfg_args_apply(fx_cfg_t *cfg, int argc, const char **argv)
         if (strcmp(arg, "--watch") == 0 || strcmp(arg, "--db") == 0 ||
             strcmp(arg, "--socket") == 0) {
             if (i + 1 >= argc) {
-                return ERR(cfg, INVALID_ARG, "fandex: %s requires a value", arg);
+                return ERR(cfg, INVALID_ARG, "ralph-knows: %s requires a value", arg);
             }
             const char *val = argv[++i];
             char *dup = talloc_strdup(cfg, val);
@@ -43,24 +43,24 @@ res_t fx_cfg_args_apply(fx_cfg_t *cfg, int argc, const char **argv)
 
         if (strcmp(arg, "--log-level") == 0) {
             if (i + 1 >= argc) {
-                return ERR(cfg, INVALID_ARG, "fandex: --log-level requires a value");
+                return ERR(cfg, INVALID_ARG, "ralph-knows: --log-level requires a value");
             }
             const char *val = argv[++i];
             if (strcasecmp(val, "debug") == 0) {
-                cfg->log_level = FX_LOG_DEBUG;
+                cfg->log_level = RK_LOG_DEBUG;
             } else if (strcasecmp(val, "info") == 0) {
-                cfg->log_level = FX_LOG_INFO;
+                cfg->log_level = RK_LOG_INFO;
             } else if (strcasecmp(val, "warn") == 0) {
-                cfg->log_level = FX_LOG_WARN;
+                cfg->log_level = RK_LOG_WARN;
             } else if (strcasecmp(val, "error") == 0) {
-                cfg->log_level = FX_LOG_ERROR;
+                cfg->log_level = RK_LOG_ERROR;
             } else {
-                return ERR(cfg, INVALID_ARG, "fandex: invalid --log-level: %s", val);
+                return ERR(cfg, INVALID_ARG, "ralph-knows: invalid --log-level: %s", val);
             }
             continue;
         }
 
-        return ERR(cfg, INVALID_ARG, "fandex: unknown flag: %s", arg);
+        return ERR(cfg, INVALID_ARG, "ralph-knows: unknown flag: %s", arg);
     }
 
     return OK(NULL);

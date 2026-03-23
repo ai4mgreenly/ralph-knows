@@ -1,6 +1,6 @@
 ---
 name: errors
-description: Error Handling skill for the fandex project
+description: Error Handling skill for the ralph-knows project
 ---
 
 # Error Handling
@@ -123,9 +123,9 @@ New exclusions require updating `LCOV_EXCL_COVERAGE` in Makefile.
 
 ```c
 // BROKEN - error is allocated on foo, then foo is freed
-res_t fx_foo_init(void *parent, foo_t **out) {
+res_t rk_foo_init(void *parent, foo_t **out) {
     foo_t *foo = talloc_zero_(parent, sizeof(foo_t));
-    res_t result = fx_bar_init(foo, &foo->bar);  // Error allocated on foo
+    res_t result = rk_bar_init(foo, &foo->bar);  // Error allocated on foo
     if (is_err(&result)) {
         talloc_free(foo);  // FREES THE ERROR TOO!
         return result;     // USE-AFTER-FREE CRASH
@@ -137,9 +137,9 @@ res_t fx_foo_init(void *parent, foo_t **out) {
 
 **Option A (Preferred):** Pass parent to sub-functions for error allocation:
 ```c
-res_t fx_foo_init(void *parent, foo_t **out) {
+res_t rk_foo_init(void *parent, foo_t **out) {
     bar_t *bar = NULL;
-    res_t result = fx_bar_init(parent, &bar);  // Error on parent - survives!
+    res_t result = rk_bar_init(parent, &bar);  // Error on parent - survives!
     if (is_err(&result)) return result;
 
     foo_t *foo = talloc_zero_(parent, sizeof(foo_t));
@@ -151,9 +151,9 @@ res_t fx_foo_init(void *parent, foo_t **out) {
 
 **Option B (Band-aid):** Reparent error before freeing context:
 ```c
-res_t fx_foo_init(void *parent, foo_t **out) {
+res_t rk_foo_init(void *parent, foo_t **out) {
     foo_t *foo = talloc_zero_(parent, sizeof(foo_t));
-    res_t result = fx_bar_init(foo, &foo->bar);
+    res_t result = rk_bar_init(foo, &foo->bar);
     if (is_err(&result)) {
         talloc_steal(parent, result.err);  // Save error to survivor
         talloc_free(foo);

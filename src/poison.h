@@ -9,8 +9,8 @@
  * DO NOT include this in .h files - it should only apply to our implementation code.
  */
 
-#ifndef FX_POISON_H
-#define FX_POISON_H
+#ifndef RK_POISON_H
+#define RK_POISON_H
 
 // Ban unsafe string functions
 #pragma GCC poison sprintf strcpy strcat gets strncpy strtok
@@ -18,4 +18,4 @@
 // Ban unsafe conversion functions
 #pragma GCC poison atoi atol atof
 
-#endif // FX_POISON_H
+#endif // RK_POISON_H

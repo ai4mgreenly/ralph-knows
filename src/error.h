@@ -1,5 +1,5 @@
-#ifndef FX_ERROR_H
-#define FX_ERROR_H
+#ifndef RK_ERROR_H
+#define RK_ERROR_H
 
 #include <assert.h>
 #include <inttypes.h>
@@ -77,8 +77,8 @@ void *talloc_zero_for_error(TALLOC_CTX *ctx, size_t size);
 
 // Forward declaration of PANIC (defined in panic.h)
 // Source files using error.h should include panic.h to get the implementation
-#define PANIC(msg) fx_panic_impl((msg), __FILE__, __LINE__)
-void fx_panic_impl(const char *msg, const char *file, int line) __attribute__((noreturn));
+#define PANIC(msg) rk_panic_impl((msg), __FILE__, __LINE__)
+void rk_panic_impl(const char *msg, const char *file, int line) __attribute__((noreturn));
 
 // Error creation - allocates on talloc context
 static inline err_t *_make_error(TALLOC_CTX *ctx,
@@ -177,4 +177,4 @@ static inline void error_fprintf(FILE *f, const err_t *e)
     fprintf(f, "Error: %s [%s:%" PRId32 "]\n", error_message(e), e->file ? e->file : "unknown", e->line);
 }
 
-#endif // FX_ERROR_H
+#endif // RK_ERROR_H

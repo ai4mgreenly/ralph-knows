@@ -10,7 +10,7 @@ Use ctags to locate function/type definitions.
 ## CLI Lookup
 
 ```bash
-grep -P "^fx_repl_init\t" tags | cut -f1-3 | sed 's/;"$//'
+grep -P "^rk_repl_init\t" tags | cut -f1-3 | sed 's/;"$//'
 ```
 
 Output: `name<TAB>file<TAB>line`

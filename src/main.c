@@ -20,17 +20,17 @@ int main(int argc, char **argv)
 {
     TALLOC_CTX *ctx = talloc_new(NULL);
 
-    res_t res = fx_cfg_load(ctx, argc, (const char **)(void *)argv);
+    res_t res = rk_cfg_load(ctx, argc, (const char **)(void *)argv);
     if (is_err(&res)) {
-        fprintf(stderr, "fandex: %s\n", res.err->msg);
+        fprintf(stderr, "ralph-knows: %s\n", res.err->msg);
         talloc_free(ctx);
         return 1;
     }
 
-    fx_cfg_t *cfg = res.ok;
+    rk_cfg_t *cfg = res.ok;
 
     if (cfg->help) {
-        printf("usage: fandex [--watch PATH] [--db PATH] [--socket PATH]\n"
+        printf("usage: ralph-knows [--watch PATH] [--db PATH] [--socket PATH]\n"
                "              [--log-level LEVEL] [-h]\n"
                "\n"
                "  --watch PATH        directory to watch (default: %s)\n"
@@ -43,15 +43,15 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    fx_log_t *log = fx_log_init(ctx, stderr, cfg->log_level);
+    rk_log_t *log = rk_log_init(ctx, stderr, cfg->log_level);
 
     const char *level_names[] = {"debug", "info", "warn", "error"};
 
-    fx_log_info(log, "fandex starting");
-    fx_log_info(log, "watch_path=%s", cfg->watch_path);
-    fx_log_info(log, "db_path=%s", cfg->db_path);
-    fx_log_info(log, "socket_path=%s", cfg->socket_path);
-    fx_log_info(log, "log_level=%s", level_names[cfg->log_level]);
+    rk_log_info(log, "ralph-knows starting");
+    rk_log_info(log, "watch_path=%s", cfg->watch_path);
+    rk_log_info(log, "db_path=%s", cfg->db_path);
+    rk_log_info(log, "socket_path=%s", cfg->socket_path);
+    rk_log_info(log, "log_level=%s", level_names[cfg->log_level]);
 
     struct sigaction sa = {0};
     sa.sa_handler = handle_signal;
@@ -59,21 +59,21 @@ int main(int argc, char **argv)
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
 
-    fx_watch_t *w = NULL;
-    res_t wres = fx_watch_init(ctx, log, cfg->watch_path);
+    rk_watch_t *w = NULL;
+    res_t wres = rk_watch_init(ctx, log, cfg->watch_path);
     if (is_err(&wres)) {
-        fx_log_error(log, "watch init failed: %s", wres.err->msg);
+        rk_log_error(log, "watch init failed: %s", wres.err->msg);
         talloc_free(ctx);
         return 1;
     }
     w = wres.ok;
 
-    fx_log_info(log, "entering main loop");
-    fx_watch_run(w);
-    fx_log_info(log, "received shutdown signal");
+    rk_log_info(log, "entering main loop");
+    rk_watch_run(w);
+    rk_log_info(log, "received shutdown signal");
 
-    fx_watch_free(w);
-    fx_log_info(log, "fandex stopping");
+    rk_watch_free(w);
+    rk_log_info(log, "ralph-knows stopping");
 
     talloc_free(ctx);
     return 0;

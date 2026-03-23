@@ -1,4 +1,4 @@
-# fandex - Makefile
+# ralph-knows - Makefile
 
 .PHONY: all help clean install fmt
 .DEFAULT_GOAL := all
@@ -155,7 +155,7 @@ include .make/check-helgrind.mk
 # Main binary
 # =============================================================================
 
-bin/fandex: $(SRC_OBJECTS) $(VENDOR_OBJECTS)
+bin/ralph-knows: $(SRC_OBJECTS) $(VENDOR_OBJECTS)
 	@mkdir -p $(dir $@)
 	@if $(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS) 2>&1; then \
 		echo "🟢 $@"; \
@@ -184,8 +184,8 @@ $(BUILDDIR)/tests/unit/%_test: $(BUILDDIR)/tests/unit/%_test.o $(MODULE_OBJ)
 # all: Build main binary
 all:
 	@$(MAKE) -k -j$(MAKE_JOBS) $(SRC_OBJECTS) $(VENDOR_OBJECTS) 2>&1 | grep -E "^(🟢|🔴)" || true
-	@$(MAKE) -k -j$(MAKE_JOBS) bin/fandex 2>&1 | grep -E "^(🟢|🔴)" || true
-	@if [ -f bin/fandex ]; then \
+	@$(MAKE) -k -j$(MAKE_JOBS) bin/ralph-knows 2>&1 | grep -E "^(🟢|🔴)" || true
+	@if [ -f bin/ralph-knows ]; then \
 		echo "✅ Build complete"; \
 	else \
 		echo "❌ Build failed"; \
@@ -207,9 +207,9 @@ clean:
 # install: Install binary to ~/.local/bin
 install: all
 	install -d $(bindir)
-	install -m 755 bin/fandex $(bindir)/fandex
-	sudo setcap cap_sys_admin,cap_dac_read_search+ep $(bindir)/fandex
-	@echo "Installed to $(bindir)/fandex"
+	install -m 755 bin/ralph-knows $(bindir)/ralph-knows
+	sudo setcap cap_sys_admin,cap_dac_read_search+ep $(bindir)/ralph-knows
+	@echo "Installed to $(bindir)/ralph-knows"
 
 # help: Show available targets
 help:

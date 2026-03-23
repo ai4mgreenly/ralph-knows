@@ -71,48 +71,48 @@ static const char *read_log(FILE *f)
     return log_buf;
 }
 
-// ---- fx_watch_init: success ----
+// ---- rk_watch_init: success ----
 
 START_TEST(test_watch_init_success) {
     TALLOC_CTX *ctx = talloc_new(NULL);
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_DEBUG);
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_DEBUG);
 
     mock_fanotify_init_retval = 42;
     mock_open_retval = 10;
     mock_fanotify_mark_retval = 0;
     mock_close_called_fd = -1;
 
-    res_t res = fx_watch_init(ctx, log, "/home/user/projects");
+    res_t res = rk_watch_init(ctx, log, "/home/user/projects");
     ck_assert(!res.is_err);
     ck_assert_ptr_nonnull(res.ok);
 
     const char *out = read_log(f);
     ck_assert_ptr_nonnull(strstr(out, "watch init"));
 
-    fx_watch_free(res.ok);
+    rk_watch_free(res.ok);
     fclose(f);
     talloc_free(ctx);
 }
 END_TEST
 
-// ---- fx_watch_init: fanotify_init fails ----
+// ---- rk_watch_init: fanotify_init fails ----
 
 START_TEST(test_watch_init_fanotify_init_fails) {
     TALLOC_CTX *ctx = talloc_new(NULL);
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_DEBUG);
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_DEBUG);
 
     mock_fanotify_init_retval = -1;
     mock_open_retval = 10;
     mock_fanotify_mark_retval = 0;
     mock_close_called_fd = -1;
 
-    res_t res = fx_watch_init(ctx, log, "/home/user/projects");
+    res_t res = rk_watch_init(ctx, log, "/home/user/projects");
     ck_assert(res.is_err);
     ck_assert_int_eq((int)res.err->code, (int)ERR_IO);
 
@@ -121,23 +121,23 @@ START_TEST(test_watch_init_fanotify_init_fails) {
 }
 END_TEST
 
-// ---- fx_watch_init: fanotify_mark fails, closes fd ----
+// ---- rk_watch_init: fanotify_mark fails, closes fd ----
 
-// ---- fx_watch_init: open watch_path fails, closes fan_fd ----
+// ---- rk_watch_init: open watch_path fails, closes fan_fd ----
 
 START_TEST(test_watch_init_open_fails) {
     TALLOC_CTX *ctx = talloc_new(NULL);
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_DEBUG);
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_DEBUG);
 
     mock_fanotify_init_retval = 42;
     mock_open_retval = -1;
     mock_fanotify_mark_retval = 0;
     mock_close_called_fd = -1;
 
-    res_t res = fx_watch_init(ctx, log, "/home/user/projects");
+    res_t res = rk_watch_init(ctx, log, "/home/user/projects");
     ck_assert(res.is_err);
     ck_assert_int_eq((int)res.err->code, (int)ERR_IO);
     ck_assert_int_eq(mock_close_called_fd, 42);
@@ -147,21 +147,21 @@ START_TEST(test_watch_init_open_fails) {
 }
 END_TEST
 
-// ---- fx_watch_init: fanotify_mark fails, closes dir fd then fan_fd ----
+// ---- rk_watch_init: fanotify_mark fails, closes dir fd then fan_fd ----
 
 START_TEST(test_watch_init_fanotify_mark_fails) {
     TALLOC_CTX *ctx = talloc_new(NULL);
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_DEBUG);
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_DEBUG);
 
     mock_fanotify_init_retval = 77;
     mock_open_retval = 10;
     mock_fanotify_mark_retval = -1;
     mock_close_called_fd = -1;
 
-    res_t res = fx_watch_init(ctx, log, "/home/user/projects");
+    res_t res = rk_watch_init(ctx, log, "/home/user/projects");
     ck_assert(res.is_err);
     ck_assert_int_eq((int)res.err->code, (int)ERR_IO);
     ck_assert_int_eq(mock_close_called_fd, 77);
@@ -171,27 +171,27 @@ START_TEST(test_watch_init_fanotify_mark_fails) {
 }
 END_TEST
 
-// ---- fx_watch_free: closes fd and logs ----
+// ---- rk_watch_free: closes fd and logs ----
 
 START_TEST(test_watch_free) {
     TALLOC_CTX *ctx = talloc_new(NULL);
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_DEBUG);
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_DEBUG);
 
     mock_fanotify_init_retval = 55;
     mock_open_retval = 10;
     mock_fanotify_mark_retval = 0;
     mock_close_called_fd = -1;
 
-    res_t res = fx_watch_init(ctx, log, "/home/user/projects");
+    res_t res = rk_watch_init(ctx, log, "/home/user/projects");
     ck_assert(!res.is_err);
 
     // Clear log from init
     read_log(f);
 
-    fx_watch_free(res.ok);
+    rk_watch_free(res.ok);
 
     ck_assert_int_eq(mock_close_called_fd, 55);
     const char *out = read_log(f);
@@ -205,66 +205,66 @@ END_TEST
 // ---- Path filtering ----
 
 START_TEST(test_path_under_inside) {
-    ck_assert(fx_watch_path_under("/home/projects", "/home/projects/foo.txt"));
+    ck_assert(rk_watch_path_under("/home/projects", "/home/projects/foo.txt"));
 }
 END_TEST
 
 START_TEST(test_path_under_exact) {
-    ck_assert(fx_watch_path_under("/home/projects", "/home/projects"));
+    ck_assert(rk_watch_path_under("/home/projects", "/home/projects"));
 }
 END_TEST
 
 START_TEST(test_path_under_outside) {
-    ck_assert(!fx_watch_path_under("/home/projects", "/home/other/foo.txt"));
+    ck_assert(!rk_watch_path_under("/home/projects", "/home/other/foo.txt"));
 }
 END_TEST
 
 START_TEST(test_path_under_prefix_no_slash) {
     // /home/projects-backup must not match /home/projects
-    ck_assert(!fx_watch_path_under("/home/projects", "/home/projects-backup/foo.txt"));
+    ck_assert(!rk_watch_path_under("/home/projects", "/home/projects-backup/foo.txt"));
 }
 END_TEST
 
 START_TEST(test_path_under_trailing_slash_watch) {
     // Trailing slash on watch_path should still work
-    ck_assert(fx_watch_path_under("/home/projects/", "/home/projects/foo.txt"));
+    ck_assert(rk_watch_path_under("/home/projects/", "/home/projects/foo.txt"));
 }
 END_TEST
 
 START_TEST(test_path_under_nested) {
-    ck_assert(fx_watch_path_under("/home/projects", "/home/projects/a/b/c"));
+    ck_assert(rk_watch_path_under("/home/projects", "/home/projects/a/b/c"));
 }
 END_TEST
 
 // ---- Event name mapping ----
 
 START_TEST(test_event_name_create) {
-    ck_assert_str_eq(fx_watch_event_name(FAN_CREATE), "create");
+    ck_assert_str_eq(rk_watch_event_name(FAN_CREATE), "create");
 }
 END_TEST
 
 START_TEST(test_event_name_delete) {
-    ck_assert_str_eq(fx_watch_event_name(FAN_DELETE), "delete");
+    ck_assert_str_eq(rk_watch_event_name(FAN_DELETE), "delete");
 }
 END_TEST
 
 START_TEST(test_event_name_modify) {
-    ck_assert_str_eq(fx_watch_event_name(FAN_MODIFY), "modify");
+    ck_assert_str_eq(rk_watch_event_name(FAN_MODIFY), "modify");
 }
 END_TEST
 
 START_TEST(test_event_name_moved_from) {
-    ck_assert_str_eq(fx_watch_event_name(FAN_MOVED_FROM), "moved_from");
+    ck_assert_str_eq(rk_watch_event_name(FAN_MOVED_FROM), "moved_from");
 }
 END_TEST
 
 START_TEST(test_event_name_moved_to) {
-    ck_assert_str_eq(fx_watch_event_name(FAN_MOVED_TO), "moved_to");
+    ck_assert_str_eq(rk_watch_event_name(FAN_MOVED_TO), "moved_to");
 }
 END_TEST
 
 START_TEST(test_event_name_unknown) {
-    ck_assert_ptr_null(fx_watch_event_name(0));
+    ck_assert_ptr_null(rk_watch_event_name(0));
 }
 END_TEST
 

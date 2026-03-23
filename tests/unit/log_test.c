@@ -29,8 +29,8 @@ START_TEST(test_log_info_prefix) {
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_DEBUG);
-    fx_log_info(log, "hello");
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_DEBUG);
+    rk_log_info(log, "hello");
 
     const char *out = read_tmpfile(f);
     ck_assert_ptr_nonnull(strstr(out, " INFO "));
@@ -46,8 +46,8 @@ START_TEST(test_log_warn_prefix) {
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_DEBUG);
-    fx_log_warn(log, "something");
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_DEBUG);
+    rk_log_warn(log, "something");
 
     const char *out = read_tmpfile(f);
     ck_assert_ptr_nonnull(strstr(out, " WARN "));
@@ -63,8 +63,8 @@ START_TEST(test_log_error_prefix) {
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_DEBUG);
-    fx_log_error(log, "boom");
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_DEBUG);
+    rk_log_error(log, "boom");
 
     const char *out = read_tmpfile(f);
     ck_assert_ptr_nonnull(strstr(out, " ERROR "));
@@ -80,8 +80,8 @@ START_TEST(test_log_format_args) {
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_DEBUG);
-    fx_log_info(log, "count=%" PRId32, (int32_t)42);
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_DEBUG);
+    rk_log_info(log, "count=%" PRId32, (int32_t)42);
 
     const char *out = read_tmpfile(f);
     ck_assert_ptr_nonnull(strstr(out, "count=42"));
@@ -96,8 +96,8 @@ START_TEST(test_log_level_suppresses_info) {
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_WARN);
-    fx_log_info(log, "suppressed");
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_WARN);
+    rk_log_info(log, "suppressed");
 
     const char *out = read_tmpfile(f);
     ck_assert_str_eq(out, "");
@@ -112,8 +112,8 @@ START_TEST(test_log_level_suppresses_warn) {
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_ERROR);
-    fx_log_warn(log, "suppressed");
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_ERROR);
+    rk_log_warn(log, "suppressed");
 
     const char *out = read_tmpfile(f);
     ck_assert_str_eq(out, "");
@@ -128,8 +128,8 @@ START_TEST(test_log_debug_level_allows_info) {
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_DEBUG);
-    fx_log_info(log, "visible");
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_DEBUG);
+    rk_log_info(log, "visible");
 
     const char *out = read_tmpfile(f);
     ck_assert_ptr_nonnull(strstr(out, "visible"));
@@ -143,7 +143,7 @@ END_TEST
 #define TS_MSGS_PER_THREAD 100
 
 struct ts_thread_arg {
-    fx_log_t *log;
+    rk_log_t *log;
     int32_t id;
 };
 
@@ -151,7 +151,7 @@ static void *ts_log_thread(void *arg)
 {
     struct ts_thread_arg *a = arg;
     for (int32_t i = 0; i < TS_MSGS_PER_THREAD; i++) {
-        fx_log_info(a->log, "thread=%" PRId32 " seq=%" PRId32, a->id, i);
+        rk_log_info(a->log, "thread=%" PRId32 " seq=%" PRId32, a->id, i);
     }
     return NULL;
 }
@@ -161,7 +161,7 @@ START_TEST(test_log_thread_safety) {
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_INFO);
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_INFO);
 
     pthread_t threads[TS_NUM_THREADS];
     struct ts_thread_arg args[TS_NUM_THREADS];
@@ -211,8 +211,8 @@ START_TEST(test_log_debug_prefix) {
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_DEBUG);
-    fx_log_debug(log, "trace");
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_DEBUG);
+    rk_log_debug(log, "trace");
 
     const char *out = read_tmpfile(f);
     ck_assert_ptr_nonnull(strstr(out, " DEBUG "));
@@ -228,8 +228,8 @@ START_TEST(test_log_debug_suppressed_by_info_level) {
     FILE *f = tmpfile();
     ck_assert_ptr_nonnull(f);
 
-    fx_log_t *log = fx_log_init(ctx, f, FX_LOG_INFO);
-    fx_log_debug(log, "suppressed");
+    rk_log_t *log = rk_log_init(ctx, f, RK_LOG_INFO);
+    rk_log_debug(log, "suppressed");
 
     const char *out = read_tmpfile(f);
     ck_assert_str_eq(out, "");

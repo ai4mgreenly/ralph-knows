@@ -1,5 +1,5 @@
-#ifndef FX_CONFIG_ARGS_H
-#define FX_CONFIG_ARGS_H
+#ifndef RK_CONFIG_ARGS_H
+#define RK_CONFIG_ARGS_H
 
 #include "config/config.h"
 
@@ -7,6 +7,6 @@
 // Recognises --watch, --db, --socket, --help / -h.
 // Returns OK(NULL) on success, ERR() on unknown flag or missing value.
 // OOM calls PANIC().
-res_t fx_cfg_args_apply(fx_cfg_t *cfg, int argc, const char **argv);
+res_t rk_cfg_args_apply(rk_cfg_t *cfg, int argc, const char **argv);
 
 #endif

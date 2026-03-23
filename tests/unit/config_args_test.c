@@ -9,29 +9,29 @@
 #include <string.h>
 
 /* Helper: load a fresh cfg under a new top-level talloc context. */
-static fx_cfg_t *base_cfg(void)
+static rk_cfg_t *base_cfg(void)
 {
-    unsetenv("FANDEX_WATCH_PATH");
-    unsetenv("FANDEX_DB_PATH");
-    unsetenv("FANDEX_SOCKET_PATH");
-    unsetenv("FANDEX_LOG_LEVEL");
-    fx_cfg_t *cfg = talloc_zero(NULL, fx_cfg_t);
+    unsetenv("RALPH_KNOWS_WATCH_PATH");
+    unsetenv("RALPH_KNOWS_DB_PATH");
+    unsetenv("RALPH_KNOWS_SOCKET_PATH");
+    unsetenv("RALPH_KNOWS_LOG_LEVEL");
+    rk_cfg_t *cfg = talloc_zero(NULL, rk_cfg_t);
     if (cfg) {
-        fx_cfg_env_load(cfg);
+        rk_cfg_env_load(cfg);
     }
     return cfg;
 }
 
 START_TEST(test_args_empty) {
-    fx_cfg_t *cfg = base_cfg();
+    rk_cfg_t *cfg = base_cfg();
     ck_assert_ptr_nonnull(cfg);
 
     char *w = talloc_strdup(cfg, cfg->watch_path);
     char *d = talloc_strdup(cfg, cfg->db_path);
     char *s = talloc_strdup(cfg, cfg->socket_path);
 
-    const char *argv[] = { "fandex" };
-    res_t r = fx_cfg_args_apply(cfg, 1, argv);
+    const char *argv[] = { "ralph-knows" };
+    res_t r = rk_cfg_args_apply(cfg, 1, argv);
 
     ck_assert(!r.is_err);
     ck_assert(!cfg->help);
@@ -39,151 +39,151 @@ START_TEST(test_args_empty) {
     ck_assert_str_eq(cfg->db_path, d);
     ck_assert_str_eq(cfg->socket_path, s);
 
-    fx_cfg_free(cfg);
+    rk_cfg_free(cfg);
 }
 END_TEST
 
 START_TEST(test_args_help_long) {
-    fx_cfg_t *cfg = base_cfg();
+    rk_cfg_t *cfg = base_cfg();
     ck_assert_ptr_nonnull(cfg);
 
-    const char *argv[] = { "fandex", "--help" };
-    res_t r = fx_cfg_args_apply(cfg, 2, argv);
+    const char *argv[] = { "ralph-knows", "--help" };
+    res_t r = rk_cfg_args_apply(cfg, 2, argv);
 
     ck_assert(!r.is_err);
     ck_assert(cfg->help);
 
-    fx_cfg_free(cfg);
+    rk_cfg_free(cfg);
 }
 END_TEST
 
 START_TEST(test_args_help_short) {
-    fx_cfg_t *cfg = base_cfg();
+    rk_cfg_t *cfg = base_cfg();
     ck_assert_ptr_nonnull(cfg);
 
-    const char *argv[] = { "fandex", "-h" };
-    res_t r = fx_cfg_args_apply(cfg, 2, argv);
+    const char *argv[] = { "ralph-knows", "-h" };
+    res_t r = rk_cfg_args_apply(cfg, 2, argv);
 
     ck_assert(!r.is_err);
     ck_assert(cfg->help);
 
-    fx_cfg_free(cfg);
+    rk_cfg_free(cfg);
 }
 END_TEST
 
 START_TEST(test_args_watch) {
-    fx_cfg_t *cfg = base_cfg();
+    rk_cfg_t *cfg = base_cfg();
     ck_assert_ptr_nonnull(cfg);
 
-    const char *argv[] = { "fandex", "--watch", "/tmp/w" };
-    res_t r = fx_cfg_args_apply(cfg, 3, argv);
+    const char *argv[] = { "ralph-knows", "--watch", "/tmp/w" };
+    res_t r = rk_cfg_args_apply(cfg, 3, argv);
 
     ck_assert(!r.is_err);
     ck_assert_str_eq(cfg->watch_path, "/tmp/w");
 
-    fx_cfg_free(cfg);
+    rk_cfg_free(cfg);
 }
 END_TEST
 
 START_TEST(test_args_db) {
-    fx_cfg_t *cfg = base_cfg();
+    rk_cfg_t *cfg = base_cfg();
     ck_assert_ptr_nonnull(cfg);
 
-    const char *argv[] = { "fandex", "--db", "/tmp/d" };
-    res_t r = fx_cfg_args_apply(cfg, 3, argv);
+    const char *argv[] = { "ralph-knows", "--db", "/tmp/d" };
+    res_t r = rk_cfg_args_apply(cfg, 3, argv);
 
     ck_assert(!r.is_err);
     ck_assert_str_eq(cfg->db_path, "/tmp/d");
 
-    fx_cfg_free(cfg);
+    rk_cfg_free(cfg);
 }
 END_TEST
 
 START_TEST(test_args_socket) {
-    fx_cfg_t *cfg = base_cfg();
+    rk_cfg_t *cfg = base_cfg();
     ck_assert_ptr_nonnull(cfg);
 
-    const char *argv[] = { "fandex", "--socket", "/tmp/s" };
-    res_t r = fx_cfg_args_apply(cfg, 3, argv);
+    const char *argv[] = { "ralph-knows", "--socket", "/tmp/s" };
+    res_t r = rk_cfg_args_apply(cfg, 3, argv);
 
     ck_assert(!r.is_err);
     ck_assert_str_eq(cfg->socket_path, "/tmp/s");
 
-    fx_cfg_free(cfg);
+    rk_cfg_free(cfg);
 }
 END_TEST
 
 START_TEST(test_args_all_three) {
-    fx_cfg_t *cfg = base_cfg();
+    rk_cfg_t *cfg = base_cfg();
     ck_assert_ptr_nonnull(cfg);
 
     const char *argv[] = {
-        "fandex",
+        "ralph-knows",
         "--watch", "/tmp/w",
         "--db", "/tmp/d",
         "--socket", "/tmp/s"
     };
-    res_t r = fx_cfg_args_apply(cfg, 7, argv);
+    res_t r = rk_cfg_args_apply(cfg, 7, argv);
 
     ck_assert(!r.is_err);
     ck_assert_str_eq(cfg->watch_path, "/tmp/w");
     ck_assert_str_eq(cfg->db_path, "/tmp/d");
     ck_assert_str_eq(cfg->socket_path, "/tmp/s");
 
-    fx_cfg_free(cfg);
+    rk_cfg_free(cfg);
 }
 END_TEST
 
 START_TEST(test_args_unknown_flag) {
-    fx_cfg_t *cfg = base_cfg();
+    rk_cfg_t *cfg = base_cfg();
     ck_assert_ptr_nonnull(cfg);
 
-    const char *argv[] = { "fandex", "--bogus" };
-    res_t r = fx_cfg_args_apply(cfg, 2, argv);
+    const char *argv[] = { "ralph-knows", "--bogus" };
+    res_t r = rk_cfg_args_apply(cfg, 2, argv);
 
     ck_assert(r.is_err);
 
-    fx_cfg_free(cfg);
+    rk_cfg_free(cfg);
 }
 END_TEST
 
 START_TEST(test_args_missing_value) {
-    fx_cfg_t *cfg = base_cfg();
+    rk_cfg_t *cfg = base_cfg();
     ck_assert_ptr_nonnull(cfg);
 
-    const char *argv[] = { "fandex", "--watch" };
-    res_t r = fx_cfg_args_apply(cfg, 2, argv);
+    const char *argv[] = { "ralph-knows", "--watch" };
+    res_t r = rk_cfg_args_apply(cfg, 2, argv);
 
     ck_assert(r.is_err);
 
-    fx_cfg_free(cfg);
+    rk_cfg_free(cfg);
 }
 END_TEST
 
 START_TEST(test_args_log_level_error) {
-    fx_cfg_t *cfg = base_cfg();
+    rk_cfg_t *cfg = base_cfg();
     ck_assert_ptr_nonnull(cfg);
 
-    const char *argv[] = { "fandex", "--log-level", "error" };
-    res_t r = fx_cfg_args_apply(cfg, 3, argv);
+    const char *argv[] = { "ralph-knows", "--log-level", "error" };
+    res_t r = rk_cfg_args_apply(cfg, 3, argv);
 
     ck_assert(!r.is_err);
-    ck_assert_int_eq(cfg->log_level, FX_LOG_ERROR);
+    ck_assert_int_eq(cfg->log_level, RK_LOG_ERROR);
 
-    fx_cfg_free(cfg);
+    rk_cfg_free(cfg);
 }
 END_TEST
 
 START_TEST(test_args_log_level_missing_value) {
-    fx_cfg_t *cfg = base_cfg();
+    rk_cfg_t *cfg = base_cfg();
     ck_assert_ptr_nonnull(cfg);
 
-    const char *argv[] = { "fandex", "--log-level" };
-    res_t r = fx_cfg_args_apply(cfg, 2, argv);
+    const char *argv[] = { "ralph-knows", "--log-level" };
+    res_t r = rk_cfg_args_apply(cfg, 2, argv);
 
     ck_assert(r.is_err);
 
-    fx_cfg_free(cfg);
+    rk_cfg_free(cfg);
 }
 END_TEST
 

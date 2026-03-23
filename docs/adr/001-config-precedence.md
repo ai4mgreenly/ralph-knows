@@ -5,8 +5,8 @@
 Configuration values are resolved in this order (highest priority wins):
 
 1. **Command-line arguments** (`--watch`, `--db`, `--socket`)
-2. **Environment variables** (`FANDEX_WATCH_PATH`, `FANDEX_DB_PATH`, `FANDEX_SOCKET_PATH`)
-3. **Compiled-in defaults** (`~/projects`, `~/.local/state/fandex/fandex.db`, `$XDG_RUNTIME_DIR/fandex/fandex.sock`)
+2. **Environment variables** (`RALPH_KNOWS_WATCH_PATH`, `RALPH_KNOWS_DB_PATH`, `RALPH_KNOWS_SOCKET_PATH`)
+3. **Compiled-in defaults** (`~/projects`, `~/.local/state/ralph-knows/ralph-knows.db`, `$XDG_RUNTIME_DIR/ralph-knows/ralph-knows.sock`)
 
 There is no config file layer. The database will serve that role later,
 slotting in between environment variables and compiled-in defaults.

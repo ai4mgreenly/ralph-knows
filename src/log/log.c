@@ -9,22 +9,22 @@
 #include <stdio.h>
 #include <time.h>
 
-struct fx_log {
+struct rk_log {
     FILE *out;
-    fx_log_level_t level;
+    rk_log_level_t level;
     pthread_mutex_t mutex;
 };
 
 // Talloc destructor: releases the mutex before the struct is freed.
-static int log_destructor(fx_log_t *log)
+static int log_destructor(rk_log_t *log)
 {
     pthread_mutex_destroy(&log->mutex);
     return 0;
 }
 
-fx_log_t *fx_log_init(TALLOC_CTX *ctx, FILE *out, fx_log_level_t level)
+rk_log_t *rk_log_init(TALLOC_CTX *ctx, FILE *out, rk_log_level_t level)
 {
-    fx_log_t *log = talloc_zero(ctx, fx_log_t);
+    rk_log_t *log = talloc_zero(ctx, rk_log_t);
     if (!log) PANIC("Out of memory"); // LCOV_EXCL_BR_LINE
 
     log->out = out;
@@ -34,9 +34,9 @@ fx_log_t *fx_log_init(TALLOC_CTX *ctx, FILE *out, fx_log_level_t level)
     return log;
 }
 
-void fx_log_info(fx_log_t *log, const char *fmt, ...)
+void rk_log_info(rk_log_t *log, const char *fmt, ...)
 {
-    if (FX_LOG_INFO < log->level) {
+    if (RK_LOG_INFO < log->level) {
         return;
     }
 
@@ -56,9 +56,9 @@ void fx_log_info(fx_log_t *log, const char *fmt, ...)
     va_end(args);
 }
 
-void fx_log_warn(fx_log_t *log, const char *fmt, ...)
+void rk_log_warn(rk_log_t *log, const char *fmt, ...)
 {
-    if (FX_LOG_WARN < log->level) {
+    if (RK_LOG_WARN < log->level) {
         return;
     }
 
@@ -78,9 +78,9 @@ void fx_log_warn(fx_log_t *log, const char *fmt, ...)
     va_end(args);
 }
 
-void fx_log_error(fx_log_t *log, const char *fmt, ...)
+void rk_log_error(rk_log_t *log, const char *fmt, ...)
 {
-    if (FX_LOG_ERROR < log->level) {
+    if (RK_LOG_ERROR < log->level) {
         return;
     }
 
@@ -101,9 +101,9 @@ void fx_log_error(fx_log_t *log, const char *fmt, ...)
 }
 
 #ifdef DEBUG
-void fx_log_debug(fx_log_t *log, const char *fmt, ...)
+void rk_log_debug(rk_log_t *log, const char *fmt, ...)
 {
-    if (FX_LOG_DEBUG < log->level) {
+    if (RK_LOG_DEBUG < log->level) {
         return;
     }
 

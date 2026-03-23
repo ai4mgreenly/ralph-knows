@@ -1,5 +1,5 @@
-#ifndef FX_WRAPPER_BASE_H
-#define FX_WRAPPER_BASE_H
+#ifndef RK_WRAPPER_BASE_H
+#define RK_WRAPPER_BASE_H
 
 // MOCKABLE - link-seam mechanism for unit testing
 //
@@ -11,4 +11,4 @@
 #define MOCKABLE __attribute__((weak))
 #endif
 
-#endif // FX_WRAPPER_BASE_H
+#endif // RK_WRAPPER_BASE_H

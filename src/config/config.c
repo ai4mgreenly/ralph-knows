@@ -5,20 +5,20 @@
 
 #include "poison.h"
 
-res_t fx_cfg_load(TALLOC_CTX *ctx, int argc, const char **argv)
+res_t rk_cfg_load(TALLOC_CTX *ctx, int argc, const char **argv)
 {
-    fx_cfg_t *cfg = talloc_zero(ctx, fx_cfg_t);
+    rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
     if (!cfg) {
         PANIC("Out of memory");
     }
 
-    res_t r = fx_cfg_env_load(cfg);
+    res_t r = rk_cfg_env_load(cfg);
     if (is_err(&r)) {
         talloc_free(cfg);
         return r;
     }
 
-    r = fx_cfg_args_apply(cfg, argc, argv);
+    r = rk_cfg_args_apply(cfg, argc, argv);
     if (is_err(&r)) {
         talloc_free(cfg);
         return r;
@@ -27,7 +27,7 @@ res_t fx_cfg_load(TALLOC_CTX *ctx, int argc, const char **argv)
     return OK(cfg);
 }
 
-void fx_cfg_free(fx_cfg_t *cfg)
+void rk_cfg_free(rk_cfg_t *cfg)
 {
     talloc_free(cfg);
 }
