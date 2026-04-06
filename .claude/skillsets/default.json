@@ -4,7 +4,8 @@
     "align",
     "scratch",
     "harness",
-    "devlog"
+    "devlog",
+    "obsidian"
   ],
   "advertise": [
     {"skill": "memory", "description": "talloc-based memory management and ownership rules"},
