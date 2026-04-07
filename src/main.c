@@ -30,15 +30,12 @@ int main(int argc, char **argv)
     rk_cfg_t *cfg = res.ok;
 
     if (cfg->help) {
-        printf("usage: ralph-knows [--watch PATH] [--db PATH] [--socket PATH]\n"
-               "              [--log-level LEVEL] [-h]\n"
+        printf("usage: ralph-knows [--watch PATH] [--db NAME] [--log-level LEVEL] [-h]\n"
                "\n"
-               "  --watch PATH        directory to watch (default: %s)\n"
-               "  --db PATH           database path (default: %s)\n"
-               "  --socket PATH       socket path (default: %s)\n"
+               "  --watch PATH        directory to watch (default: ~/projects)\n"
+               "  --db NAME           db/socket base name (default: basename of watch path)\n"
                "  --log-level LEVEL   log level: debug, info, warn, error (default: info)\n"
-               "  -h, --help          show this help\n",
-               cfg->watch_path, cfg->db_path, cfg->socket_path);
+               "  -h, --help          show this help\n");
         talloc_free(ctx);
         return 0;
     }
@@ -48,6 +45,7 @@ int main(int argc, char **argv)
     const char *level_names[] = {"debug", "info", "warn", "error"};
 
     rk_log_info(log, "ralph-knows starting");
+    rk_log_info(log, "instance=%s", cfg->instance_name);
     rk_log_info(log, "watch_path=%s", cfg->watch_path);
     rk_log_info(log, "db_path=%s", cfg->db_path);
     rk_log_info(log, "socket_path=%s", cfg->socket_path);

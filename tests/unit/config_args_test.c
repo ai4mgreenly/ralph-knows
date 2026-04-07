@@ -12,8 +12,7 @@
 static rk_cfg_t *base_cfg(void)
 {
     unsetenv("RALPH_KNOWS_WATCH_PATH");
-    unsetenv("RALPH_KNOWS_DB_PATH");
-    unsetenv("RALPH_KNOWS_SOCKET_PATH");
+    unsetenv("RALPH_KNOWS_STATE_DIR");
     unsetenv("RALPH_KNOWS_LOG_LEVEL");
     rk_cfg_t *cfg = talloc_zero(NULL, rk_cfg_t);
     if (cfg) {
@@ -27,8 +26,7 @@ START_TEST(test_args_empty) {
     ck_assert_ptr_nonnull(cfg);
 
     char *w = talloc_strdup(cfg, cfg->watch_path);
-    char *d = talloc_strdup(cfg, cfg->db_path);
-    char *s = talloc_strdup(cfg, cfg->socket_path);
+    char *s = talloc_strdup(cfg, cfg->state_dir);
 
     const char *argv[] = { "ralph-knows" };
     res_t r = rk_cfg_args_apply(cfg, 1, argv);
@@ -36,8 +34,8 @@ START_TEST(test_args_empty) {
     ck_assert(!r.is_err);
     ck_assert(!cfg->help);
     ck_assert_str_eq(cfg->watch_path, w);
-    ck_assert_str_eq(cfg->db_path, d);
-    ck_assert_str_eq(cfg->socket_path, s);
+    ck_assert_str_eq(cfg->state_dir, s);
+    ck_assert_ptr_null(cfg->db_name);
 
     rk_cfg_free(cfg);
 }
@@ -85,50 +83,47 @@ START_TEST(test_args_watch) {
 }
 END_TEST
 
-START_TEST(test_args_db) {
+START_TEST(test_args_db_bare) {
     rk_cfg_t *cfg = base_cfg();
     ck_assert_ptr_nonnull(cfg);
 
-    const char *argv[] = { "ralph-knows", "--db", "/tmp/d" };
+    const char *argv[] = { "ralph-knows", "--db", "mydb" };
     res_t r = rk_cfg_args_apply(cfg, 3, argv);
 
     ck_assert(!r.is_err);
-    ck_assert_str_eq(cfg->db_path, "/tmp/d");
+    ck_assert_str_eq(cfg->db_name, "mydb");
 
     rk_cfg_free(cfg);
 }
 END_TEST
 
-START_TEST(test_args_socket) {
+START_TEST(test_args_db_slash_rejected) {
     rk_cfg_t *cfg = base_cfg();
     ck_assert_ptr_nonnull(cfg);
 
-    const char *argv[] = { "ralph-knows", "--socket", "/tmp/s" };
+    const char *argv[] = { "ralph-knows", "--db", "bad/name" };
     res_t r = rk_cfg_args_apply(cfg, 3, argv);
 
-    ck_assert(!r.is_err);
-    ck_assert_str_eq(cfg->socket_path, "/tmp/s");
+    ck_assert(r.is_err);
 
     rk_cfg_free(cfg);
 }
 END_TEST
 
-START_TEST(test_args_all_three) {
+START_TEST(test_args_watch_and_db) {
     rk_cfg_t *cfg = base_cfg();
     ck_assert_ptr_nonnull(cfg);
 
     const char *argv[] = {
         "ralph-knows",
         "--watch", "/tmp/w",
-        "--db", "/tmp/d",
-        "--socket", "/tmp/s"
+        "--db", "mydb"
     };
-    res_t r = rk_cfg_args_apply(cfg, 7, argv);
+    res_t r = rk_cfg_args_apply(cfg, 5, argv);
 
     ck_assert(!r.is_err);
     ck_assert_str_eq(cfg->watch_path, "/tmp/w");
-    ck_assert_str_eq(cfg->db_path, "/tmp/d");
-    ck_assert_str_eq(cfg->socket_path, "/tmp/s");
+    ck_assert_str_eq(cfg->db_name, "mydb");
 
     rk_cfg_free(cfg);
 }
@@ -196,9 +191,9 @@ static Suite *config_args_suite(void)
     tcase_add_test(tc, test_args_help_long);
     tcase_add_test(tc, test_args_help_short);
     tcase_add_test(tc, test_args_watch);
-    tcase_add_test(tc, test_args_db);
-    tcase_add_test(tc, test_args_socket);
-    tcase_add_test(tc, test_args_all_three);
+    tcase_add_test(tc, test_args_db_bare);
+    tcase_add_test(tc, test_args_db_slash_rejected);
+    tcase_add_test(tc, test_args_watch_and_db);
     tcase_add_test(tc, test_args_unknown_flag);
     tcase_add_test(tc, test_args_missing_value);
     tcase_add_test(tc, test_args_log_level_error);

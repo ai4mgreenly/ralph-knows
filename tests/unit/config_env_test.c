@@ -5,16 +5,12 @@
 #include <talloc.h>
 
 #include <check.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
 
 static void clear_env(void)
 {
     unsetenv("RALPH_KNOWS_WATCH_PATH");
-    unsetenv("RALPH_KNOWS_DB_PATH");
-    unsetenv("RALPH_KNOWS_SOCKET_PATH");
+    unsetenv("RALPH_KNOWS_STATE_DIR");
     unsetenv("XDG_RUNTIME_DIR");
     unsetenv("RALPH_KNOWS_LOG_LEVEL");
 }
@@ -28,18 +24,13 @@ START_TEST(test_env_no_vars) {
     ck_assert(!r.is_err);
 
     const char *home = getenv("HOME");
-    uid_t uid = getuid();
     char expected[512];
 
     (void)snprintf(expected, sizeof(expected), "%s%s", home, RK_DEFAULT_WATCH_PATH_SUFFIX);
     ck_assert_str_eq(cfg->watch_path, expected);
 
-    (void)snprintf(expected, sizeof(expected), "%s%s", home, RK_DEFAULT_DB_PATH_SUFFIX);
-    ck_assert_str_eq(cfg->db_path, expected);
-
-    (void)snprintf(expected, sizeof(expected), "/run/user/%u%s", (unsigned)uid,
-                   RK_DEFAULT_SOCKET_PATH_SUFFIX);
-    ck_assert_str_eq(cfg->socket_path, expected);
+    (void)snprintf(expected, sizeof(expected), "%s%s", home, RK_DEFAULT_STATE_DIR_SUFFIX);
+    ck_assert_str_eq(cfg->state_dir, expected);
 
     talloc_free(ctx);
 }
@@ -59,29 +50,24 @@ START_TEST(test_env_watch_path) {
     const char *home = getenv("HOME");
     char expected[512];
 
-    (void)snprintf(expected, sizeof(expected), "%s%s", home, RK_DEFAULT_DB_PATH_SUFFIX);
-    ck_assert_str_eq(cfg->db_path, expected);
-
-    uid_t uid = getuid();
-    (void)snprintf(expected, sizeof(expected), "/run/user/%u%s", (unsigned)uid,
-                   RK_DEFAULT_SOCKET_PATH_SUFFIX);
-    ck_assert_str_eq(cfg->socket_path, expected);
+    (void)snprintf(expected, sizeof(expected), "%s%s", home, RK_DEFAULT_STATE_DIR_SUFFIX);
+    ck_assert_str_eq(cfg->state_dir, expected);
 
     talloc_free(ctx);
     clear_env();
 }
 END_TEST
 
-START_TEST(test_env_db_path) {
+START_TEST(test_env_state_dir) {
     clear_env();
-    setenv("RALPH_KNOWS_DB_PATH", "/tmp/test.db", 1);
+    setenv("RALPH_KNOWS_STATE_DIR", "/tmp/mystate", 1);
 
     TALLOC_CTX *ctx = talloc_new(NULL);
     rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
     res_t r = rk_cfg_env_load(cfg);
     ck_assert(!r.is_err);
 
-    ck_assert_str_eq(cfg->db_path, "/tmp/test.db");
+    ck_assert_str_eq(cfg->state_dir, "/tmp/mystate");
 
     const char *home = getenv("HOME");
     char expected[512];
@@ -89,63 +75,14 @@ START_TEST(test_env_db_path) {
     (void)snprintf(expected, sizeof(expected), "%s%s", home, RK_DEFAULT_WATCH_PATH_SUFFIX);
     ck_assert_str_eq(cfg->watch_path, expected);
 
-    uid_t uid = getuid();
-    (void)snprintf(expected, sizeof(expected), "/run/user/%u%s", (unsigned)uid,
-                   RK_DEFAULT_SOCKET_PATH_SUFFIX);
-    ck_assert_str_eq(cfg->socket_path, expected);
-
     talloc_free(ctx);
     clear_env();
 }
 END_TEST
 
-START_TEST(test_env_socket_path) {
-    clear_env();
-    setenv("RALPH_KNOWS_SOCKET_PATH", "/tmp/test.sock", 1);
-
-    TALLOC_CTX *ctx = talloc_new(NULL);
-    rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
-    res_t r = rk_cfg_env_load(cfg);
-    ck_assert(!r.is_err);
-
-    ck_assert_str_eq(cfg->socket_path, "/tmp/test.sock");
-
-    const char *home = getenv("HOME");
-    char expected[512];
-
-    (void)snprintf(expected, sizeof(expected), "%s%s", home, RK_DEFAULT_WATCH_PATH_SUFFIX);
-    ck_assert_str_eq(cfg->watch_path, expected);
-
-    (void)snprintf(expected, sizeof(expected), "%s%s", home, RK_DEFAULT_DB_PATH_SUFFIX);
-    ck_assert_str_eq(cfg->db_path, expected);
-
-    talloc_free(ctx);
-    clear_env();
-}
-END_TEST
-
-START_TEST(test_env_xdg_runtime_dir) {
-    clear_env();
-    setenv("XDG_RUNTIME_DIR", "/custom/dir", 1);
-
-    TALLOC_CTX *ctx = talloc_new(NULL);
-    rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
-    res_t r = rk_cfg_env_load(cfg);
-    ck_assert(!r.is_err);
-
-    char expected[512];
-    (void)snprintf(expected, sizeof(expected), "/custom/dir%s", RK_DEFAULT_SOCKET_PATH_SUFFIX);
-    ck_assert_str_eq(cfg->socket_path, expected);
-
-    talloc_free(ctx);
-    clear_env();
-}
-END_TEST
-
-START_TEST(test_env_all_three) {
+START_TEST(test_env_both) {
     setenv("RALPH_KNOWS_WATCH_PATH", "/tmp/w", 1);
-    setenv("RALPH_KNOWS_DB_PATH", "/tmp/d", 1);
-    setenv("RALPH_KNOWS_SOCKET_PATH", "/tmp/s", 1);
+    setenv("RALPH_KNOWS_STATE_DIR", "/tmp/s", 1);
 
     TALLOC_CTX *ctx = talloc_new(NULL);
     rk_cfg_t *cfg = talloc_zero(ctx, rk_cfg_t);
@@ -153,8 +90,7 @@ START_TEST(test_env_all_three) {
     ck_assert(!r.is_err);
 
     ck_assert_str_eq(cfg->watch_path, "/tmp/w");
-    ck_assert_str_eq(cfg->db_path, "/tmp/d");
-    ck_assert_str_eq(cfg->socket_path, "/tmp/s");
+    ck_assert_str_eq(cfg->state_dir, "/tmp/s");
 
     talloc_free(ctx);
     clear_env();
@@ -225,10 +161,8 @@ static Suite *config_env_suite(void)
 
     tcase_add_test(tc, test_env_no_vars);
     tcase_add_test(tc, test_env_watch_path);
-    tcase_add_test(tc, test_env_db_path);
-    tcase_add_test(tc, test_env_socket_path);
-    tcase_add_test(tc, test_env_xdg_runtime_dir);
-    tcase_add_test(tc, test_env_all_three);
+    tcase_add_test(tc, test_env_state_dir);
+    tcase_add_test(tc, test_env_both);
     tcase_add_test(tc, test_env_no_log_level);
     tcase_add_test(tc, test_env_log_level_warn);
     tcase_add_test(tc, test_env_log_level_debug);

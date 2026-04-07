@@ -1,7 +1,6 @@
 #include "config/config_args.h"
 #include <talloc.h>
 
-#include <stdio.h>
 #include <string.h>
 #include <strings.h>
 
@@ -17,27 +16,35 @@ res_t rk_cfg_args_apply(rk_cfg_t *cfg, int argc, const char **argv)
             continue;
         }
 
-        if (strcmp(arg, "--watch") == 0 || strcmp(arg, "--db") == 0 ||
-            strcmp(arg, "--socket") == 0) {
+        if (strcmp(arg, "--watch") == 0) {
             if (i + 1 >= argc) {
                 return ERR(cfg, INVALID_ARG, "ralph-knows: %s requires a value", arg);
             }
             const char *val = argv[++i];
             char *dup = talloc_strdup(cfg, val);
             if (!dup) {
-                PANIC("Out of memory");
+                PANIC("Out of memory"); // LCOV_EXCL_BR_LINE
             }
+            talloc_free(cfg->watch_path);
+            cfg->watch_path = dup;
+            continue;
+        }
 
-            if (strcmp(arg, "--watch") == 0) {
-                talloc_free(cfg->watch_path);
-                cfg->watch_path = dup;
-            } else if (strcmp(arg, "--db") == 0) {
-                talloc_free(cfg->db_path);
-                cfg->db_path = dup;
-            } else {
-                talloc_free(cfg->socket_path);
-                cfg->socket_path = dup;
+        if (strcmp(arg, "--db") == 0) {
+            if (i + 1 >= argc) {
+                return ERR(cfg, INVALID_ARG, "ralph-knows: %s requires a value", arg);
             }
+            const char *val = argv[++i];
+            if (strchr(val, '/') != NULL) {
+                return ERR(cfg, INVALID_ARG,
+                           "ralph-knows: --db takes a bare filename (no slashes): %s", val);
+            }
+            char *dup = talloc_strdup(cfg, val);
+            if (!dup) {
+                PANIC("Out of memory"); // LCOV_EXCL_BR_LINE
+            }
+            talloc_free(cfg->db_name);
+            cfg->db_name = dup;
             continue;
         }
 
