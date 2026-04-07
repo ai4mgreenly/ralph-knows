@@ -204,12 +204,21 @@ clean:
 	@find src/ tests/ vendor/ -name '*.d' -delete 2>/dev/null || true
 	@echo "✨ Cleaned"
 
-# install: Install binary to ~/.local/bin
-install: all
+# install: Install binary and systemd user service unit file
+install:
+	$(MAKE) BUILD=release all
 	install -d $(bindir)
 	install -m 755 bin/ralph-knows $(bindir)/ralph-knows
 	sudo setcap cap_sys_admin,cap_dac_read_search+ep $(bindir)/ralph-knows
+	install -d $(HOME_DIR)/.config/systemd/user
+	install -m 644 dist/ralph-knows.service $(HOME_DIR)/.config/systemd/user/ralph-knows.service
+	systemctl --user daemon-reload
 	@echo "Installed to $(bindir)/ralph-knows"
+	@echo "Unit file installed to $(HOME_DIR)/.config/systemd/user/ralph-knows.service"
+	@echo ""
+	@echo "To enable and start the service:"
+	@echo "  systemctl --user enable ralph-knows"
+	@echo "  systemctl --user start ralph-knows"
 
 # help: Show available targets
 help:

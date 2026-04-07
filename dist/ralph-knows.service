@@ -1,0 +1,12 @@
+[Unit]
+Description=ralph-knows filesystem index
+After=local-fs.target
+
+[Service]
+ExecStart=%h/.local/bin/ralph-knows --watch /mnt/projects
+Restart=on-failure
+RestartSec=5
+AmbientCapabilities=CAP_SYS_ADMIN CAP_DAC_READ_SEARCH
+
+[Install]
+WantedBy=default.target
