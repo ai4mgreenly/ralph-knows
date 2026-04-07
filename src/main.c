@@ -53,6 +53,7 @@ int main(int argc, char **argv)
     const char *level_names[] = {"debug", "info", "warn", "error"};
 
     rk_log_info(log, "ralph-knows starting");
+    rk_log_info(log, "version=%s", RK_VERSION_STR);
     rk_log_info(log, "instance=%s", cfg->instance_name);
     rk_log_info(log, "watch_path=%s", cfg->watch_path);
     rk_log_info(log, "db_path=%s", cfg->db_path);
