@@ -213,8 +213,10 @@ install:
 	install -d $(HOME_DIR)/.config/systemd/user
 	install -m 644 dist/ralph-knows.service $(HOME_DIR)/.config/systemd/user/ralph-knows.service
 	systemctl --user daemon-reload
+	sudo loginctl enable-linger $(shell whoami)
 	@echo "Installed to $(bindir)/ralph-knows"
 	@echo "Unit file installed to $(HOME_DIR)/.config/systemd/user/ralph-knows.service"
+	@echo "Linger enabled for $(shell whoami) — service will start at boot without login"
 	@echo ""
 	@echo "To enable and start the service:"
 	@echo "  systemctl --user enable ralph-knows"
