@@ -15,6 +15,7 @@ typedef struct rk_cfg {
     char *db_path;       // derived: state_dir/db_name.db
     char *socket_path;   // derived: XDG_RUNTIME_DIR/ralph-knows/db_name.sock
     bool help;
+    bool version;
     rk_log_level_t log_level;
 } rk_cfg_t;
 

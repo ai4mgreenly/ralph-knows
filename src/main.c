@@ -1,5 +1,6 @@
 #include "config/config.h"
 #include "log/log.h"
+#include "version.h"
 #include "watch/watch.h"
 
 #include <signal.h>
@@ -29,13 +30,20 @@ int main(int argc, char **argv)
 
     rk_cfg_t *cfg = res.ok;
 
+    if (cfg->version) {
+        printf("%s\n", RK_VERSION_STR);
+        talloc_free(ctx);
+        return 0;
+    }
+
     if (cfg->help) {
         printf("usage: ralph-knows [--watch PATH] [--db NAME] [--log-level LEVEL] [-h]\n"
                "\n"
                "  --watch PATH        directory to watch (default: ~/projects)\n"
                "  --db NAME           db/socket base name (default: basename of watch path)\n"
                "  --log-level LEVEL   log level: debug, info, warn, error (default: info)\n"
-               "  -h, --help          show this help\n");
+               "  -h, --help          show this help\n"
+               "  -v, --version       print version and exit\n");
         talloc_free(ctx);
         return 0;
     }

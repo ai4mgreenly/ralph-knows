@@ -16,6 +16,11 @@ res_t rk_cfg_args_apply(rk_cfg_t *cfg, int argc, const char **argv)
             continue;
         }
 
+        if (strcmp(arg, "--version") == 0 || strcmp(arg, "-v") == 0) {
+            cfg->version = true;
+            continue;
+        }
+
         if (strcmp(arg, "--watch") == 0) {
             if (i + 1 >= argc) {
                 return ERR(cfg, INVALID_ARG, "ralph-knows: %s requires a value", arg);
